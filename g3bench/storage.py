@@ -201,13 +201,19 @@ def run_storage(args):
         raise ValueError("Per-stage timeout must be 10–7200 seconds")
     inventory = discover()
     targets = []
+    selection_errors = []
     for directory in (args.target or []) if platform.system() == "Linux" else []:
-        target = resolve_target(directory, inventory)
+        try:
+            target = resolve_target(directory, inventory)
+        except (OSError, ValueError) as exc:
+            selection_errors.append({"target": {"directory": directory, "source": directory, "mount": None},
+                                     "status": "unavailable", "reason": str(exc), "tests": {}})
+            continue
         if target["id"] in {row["id"] for row in targets}:
             raise ValueError("Choose only one test directory per filesystem")
         targets.append(target)
     if args.all:
-        if targets:
+        if args.target:
             raise ValueError("Choose --all or --target, not both")
         targets = [row for row in inventory if row["selected_by_default"]]
     if not args.allow_writes:
@@ -225,6 +231,9 @@ def run_storage(args):
             "classification": "STORAGE", "status": "partial", "stage": "Storage preflight", "telemetry": [],
             "test_status": {}, "results": {"storage": {"inventory": inventory, "drives": []}},
             "errors": {}, "scores": scores({}), "power": None, "comparison_eligible": False}
+    data["results"]["storage"]["drives"].extend(selection_errors)
+    for index, entry in enumerate(selection_errors):
+        data["test_status"]["selection-" + str(index)] = {"status": entry["status"], "reason": entry["target"]["directory"] + ": " + entry["reason"]}
     start = time.monotonic()
     stop = threading.Event()
     sampler = Sampler()

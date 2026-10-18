@@ -155,6 +155,19 @@ class StorageRunnerTests(unittest.TestCase):
                 dashboard.start("storage", options={"targets": ["/home/test"], "size_mib": 1024})
             process.assert_not_called()
 
+    def test_invalid_explicit_selection_keeps_other_drive_and_report(self):
+        row = {"id": "1:2", "directory": "/good", "source": "/dev/b", "mount": "/good"}
+        with tempfile.TemporaryDirectory(dir=ROOT / "build") as folder:
+            args = self.args(folder)
+            args.all = False
+            args.target = ["/gone", "/good"]
+            with patch("g3bench.storage.discover", return_value=[row]), patch("g3bench.storage.resolve_target", side_effect=[ValueError("unplugged before start"), row, row]), patch("g3bench.storage.measure_drive", return_value={"status": "passed", "reason": "ok", "tests": {}}) as measure, patch("g3bench.storage.platform.system", return_value="Linux"), patch("g3bench.storage.shutil.which", return_value="fio"), patch("g3bench.storage.command", return_value="fio-3.33"), patch("g3bench.storage.time.sleep"), contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(run_storage(args), 1)
+            result = json.loads(next(Path(folder).glob("*/result.json")).read_text())
+            self.assertEqual(result["status"], "partial")
+            self.assertEqual([d["status"] for d in result["results"]["storage"]["drives"]], ["unavailable", "passed"])
+            measure.assert_called_once()
+
     def test_tuning_captures_compression_and_governor_without_mutation(self):
         def paths(pattern):
             return ["/sys/block/zram0"] if "zram" in pattern else ["/sys/devices/system/cpu/cpufreq/policy0"]

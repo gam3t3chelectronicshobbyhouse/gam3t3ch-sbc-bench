@@ -15,8 +15,19 @@ were verified; the cover closed automatically and results were saved.
 An integrated source full run completed CPU, memory, sustained load, explicit
 Vulkan Godot and HTTP networking with one telemetry stream. Windows-only
 unavailable Linux GLES/storage components remained explicit. No sensor readings
-were fabricated. Updated package and Linux/Mesa/fio/iperf3 CI checks follow this
-source validation. Gaia's V3D and USB HDD still require physical reruns.
+were fabricated. Final Linux run 39172441846 passed all 57 tests, including real fio and iperf3,
+and passed a Mesa shader probe plus all five actual GLES scenes. Package run
+39172577492 passed Windows/Linux x86-64/native Linux ARM64 frozen native and
+bundled-engine checks. Its seven installer/archive/checksum assets are public
+in v0.5.2. The published Windows installer was SHA256-verified, installed over
+0.4.0, and its new frozen load worker passed with desktop/uninstall menu entries
+present. A full checkup launched from the installed 0.5.2 dashboard completed
+CPU/memory/load/Godot, saved 59 samples over 51.992 seconds, retained fullscreen
+mode 3 and returned to idle. Its short verification load was explicitly set to
+two seconds; the normal default remains 60. The actual packaged Compatibility
+backend was opengl3. Windows GLES/fio remained unavailable/unsupported and
+network was explicitly off, so the root was correctly partial. No renderer
+remained active. Gaia's V3D and USB HDD still require physical reruns.
 
 ## Suite 0.4.0
 

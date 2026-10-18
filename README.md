@@ -6,10 +6,13 @@ Tests run on the machine being measured. Reports contain measured rates and
 sensor readings; unavailable measurements stay unavailable rather than being
 replaced with estimates or demo values.
 
-**0.5.2 testing source.** Standalone packages embed Godot 4.4.1, so the editor
-is not needed. Source CPU/load/full runs, real HTTP transfer and bundled-engine
-Vulkan checks have passed on Windows. Updated standalone CI qualification and
-Gaia's physical rerun are tracked in [validation](docs/VALIDATION.md).
+**0.5.2 hardware-testing prerelease is available.** Standalone Windows,
+Linux ARM64 and Linux PC packages include Godot 4.4.1; the editor is not needed.
+All package checks and 57 Linux tests passed, including real GLES scenes, fio
+and iperf3. Gaia's V3D/USB HDD rerun remains required. See
+[downloads](https://github.com/gam3t3chelectronicshobbyhouse/gam3t3ch-sbc-bench/releases/tag/v0.5.2)
+and [validation](docs/VALIDATION.md).
+
 
 ## 0.5.2: diagnostics, sustained load and useful comparisons
 
@@ -47,6 +50,10 @@ Gaia's physical rerun are tracked in [validation](docs/VALIDATION.md).
   include the comparisons. Existing PDF images cannot restore missing raw data.
   Whole-system I/O activity includes other processes and is not application-only
   workload bandwidth. Loaded runs stay local; report viewing makes no requests.
+
+A Vulkan probe may enumerate software adapters alongside hardware. Check the
+**actual benchmark renderer/backend** before treating a software-adapter warning
+as proof that the measured run used software rendering.
 
 ### Network send / receive
 
@@ -174,6 +181,12 @@ A recognized new-style installation is retained and relaunched, without an
 implicit update. Unrelated existing directories are not overwritten. For a
 custom/offline source build, run `python3 installer.py --help`. Options include
 `--prefix`, `--no-launch`, `--skip-godot`, `--source` and `--compiler`.
+
+To upgrade Windows setup installs, close the dashboard and run the newer setup;
+external results are retained. For an existing source/Linux user installation,
+back up results, run its uninstaller, then install the new version. The source
+one-liner deliberately relaunches an existing recognized installation rather
+than silently overwriting it.
 
 Existing installations made from the older Git-based installer can be updated
 manually after saving results:

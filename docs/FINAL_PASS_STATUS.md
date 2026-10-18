@@ -15,8 +15,11 @@ applied automatically. CPU/RAM normalization stays common across boards.
 Local Windows checks: 57 tests, 55 pass and Linux fio/iperf integrations skipped;
 actual CPU/load/full/HTTP execution and bundled Godot 4.4.1 fullscreen Vulkan
 execution passed for available components. Full mode retained one sensor trace;
-Windows-inapplicable sensors/GLES/fio remained unavailable. Updated package CI
-and physical Pi qualification are tracked in VALIDATION.md.
+Windows-inapplicable sensors/GLES/fio remained unavailable. All 57 Linux tests, the Mesa shader probe and all five real GLES scenes passed.
+Windows/Linux x86-64/Linux ARM64 package checks passed; v0.5.2 installers and
+checksums are public. The published Windows setup upgraded the existing app and
+its new frozen load worker passed. Physical Pi qualification remains tracked
+in VALIDATION.md.
 
 Still outside scope: controlled zram/memory-pressure benefits, video/audio
 quality/latency tests, long endurance, manual power/per-watt and calibrated

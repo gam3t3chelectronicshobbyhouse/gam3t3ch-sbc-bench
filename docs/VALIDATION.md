@@ -1,4 +1,38 @@
-# First milestone validation — 2026-10-18
+# Validation — 2026-10-18
+
+## Suite 0.4.0
+
+- Full Windows regression with `G3BENCH_RUN_SOCKET_TESTS=1`: 47 tests,
+  46 passed and one Linux-only real-fio integration test skipped. Includes real
+  loopback upload/listener shutdown, authentication/limits, frozen command
+  construction, sequential full-checkup failure isolation, one shared sampler,
+  archive safety and result-preserving uninstall/shortcut ownership checks.
+- Python compilation, PowerShell parser, JavaScript and shell syntax passed.
+- Windows standalone ZIP and Inno Setup executable built with PyInstaller
+  6.16.0, native workers and checksum-verified official Godot 4.4.1.
+- A real frozen full checkup completed in approximately 50 seconds. CPU/memory
+  passed and all three Godot stages passed. Godot recorded fullscreen mode 3,
+  1920x1080 presentation and fixed 1280x720 internal rendering, then exited.
+  Native GLES and Linux fio/sensors were explicitly unavailable on this Windows
+  host, so the combined run was correctly partial, with no invented readings.
+- Browser stats PNG export produced a real 1600-pixel-wide image, inspected for
+  raw measurements, availability reasons, versions and methodology references.
+  It omits hostname/IP/mount paths and notes by default; export makes no upload.
+- Windows installer cycle passed: setup created desktop/app/uninstall menu
+  shortcuts, its installed native worker produced a result, uninstall removed
+  app files/shortcuts and retained external results, then the app was installed
+  into the default per-user location with the desktop/menu entries verified.
+- Real local development results remain ignored under build/. They are not Pi
+  benchmark evidence or calibrated reference scores.
+
+Remaining qualification: additional clean target-system checks, Linux architecture CI,
+physical LAN transfer between machines, and actual Pi/removable-drive tests.
+Focus/topmost are requests subject to desktop policy. Headless engine startup
+is not a substitute for graphical validation on each Pi. ARMv6 remains
+experimental; no qualified standalone macOS package is supplied.
+
+An earlier packaging-tool approval failure due to account usage limits cleared;
+tools and real packaging/full-run checks subsequently completed normally.
 
 ## Suite 0.3.0 storage and tuning
 

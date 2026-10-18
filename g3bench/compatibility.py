@@ -36,7 +36,7 @@ def prepare(hw, native, gpu, execute, *, headless=False, compat=False, fullscree
     elif not gpu:
         plan["gpu"] = state("unavailable", "SDL2/GLES2 executable not built or installed.")
     else:
-        flags = ["--probe"] + (["--compat"] if compat else []) + (["--fullscreen"] if fullscreen else [])
+        flags = ["--probe"] + (["--compat"] if compat else []) + (["--fullscreen"] if fullscreen else ["--windowed"])
         try:
             probe = execute(gpu, flags, timeout=15)
             if probe.get("suite_version") != VERSION or probe.get("workload_id") != WORKLOAD:

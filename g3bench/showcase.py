@@ -15,12 +15,14 @@ from .report import export_report
 from .scoring import scores
 from .system import Sampler, cpu_ticks, hardware, processes
 
-SHOWCASE_ID = "reactor-showcase-0.2"
+SHOWCASE_ID = "reactor-showcase-0.3"
 PROJECT = Path(__file__).resolve().parent.parent / "showcase"
 
 
 def find_engine(explicit=None):
-    candidate = explicit or os.environ.get("G3BENCH_GODOT") or shutil.which("godot4") or shutil.which("godot")
+    installed = PROJECT.parent / "runtime" / "godot"
+    bundled = next((str(path) for path in (installed / "godot.exe", installed / "godot", installed / "Godot.app" / "Contents" / "MacOS" / "Godot") if path.is_file()), None)
+    candidate = explicit or os.environ.get("G3BENCH_GODOT") or bundled or shutil.which("godot4") or shutil.which("godot")
     if not candidate:
         return None
     path = Path(candidate).expanduser().resolve()
@@ -65,7 +67,7 @@ def run_showcase(args):
     data = {"schema_version": 2, "benchmark_version": VERSION, "workload_id": SHOWCASE_ID,
             "timestamp": stamp.isoformat(), "run_id": folder.name, "hardware": hardware(),
             "configuration": {"mode": "showcase", "resolution": [1280, 720], "scene_seconds": 10,
-                              "renderer": "gl_compatibility", "report_updates": "after-run"},
+                              "renderer": "gl_compatibility", "report_updates": "after-run", "fullscreen": args.fullscreen},
             "classification": "SMOKE_TEST" if args.smoke_test else "SHOWCASE",
             "status": "partial", "stage": "Showcase preflight", "test_status": {}, "telemetry": [],
             "results": {}, "scores": scores({}), "errors": {}, "power": None, "comparison_eligible": False}
@@ -73,8 +75,13 @@ def run_showcase(args):
     data["configuration"].update(label=getattr(args, "label", "Stock baseline"), notes=getattr(args, "notes", ""))
     logger = None
     started = time.monotonic()
-    sampler = Sampler()
+    session = getattr(args, "_session", None)
+    if session:
+        session.attach(data, started)
+    sampler = None if session else Sampler()
     def sample():
+        if session:
+            return session.sample()
         value = sampler.sample()
         value.update(elapsed_seconds=round(time.monotonic() - started, 3), stage=data["stage"])
         data["telemetry"].append(value)
@@ -114,8 +121,9 @@ def run_showcase(args):
                     if args.as_configured:
                         data["configuration"]["background_load_accepted"] = True
                     sample()
-                    logger = threading.Thread(target=log_telemetry, daemon=True)
-                    logger.start()
+                    if not session:
+                        logger = threading.Thread(target=log_telemetry, daemon=True)
+                        logger.start()
                     raw = folder / "showcase.json"
                     command = [engine, "--path", str(PROJECT), "--rendering-method", "gl_compatibility"]
                     if args.smoke_test:
@@ -123,6 +131,8 @@ def run_showcase(args):
                     if args.fullscreen:
                         command += ["--fullscreen"]
                     command += ["--", "--output", str(raw)]
+                    if args.fullscreen and not args.smoke_test:
+                        command += ["--presentation-fullscreen"]
                     if args.smoke_test:
                         command += ["--smoke-test"]
                     with (folder / "engine.log").open("w", encoding="utf-8") as log:

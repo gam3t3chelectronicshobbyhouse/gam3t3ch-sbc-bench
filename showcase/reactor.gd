@@ -1,7 +1,7 @@
 extends Node3D
 ## Fixed, optional 3D showcase. This never contributes to baseline scores.
 
-const WORKLOAD_ID = "reactor-showcase-0.2"
+const WORKLOAD_ID = "reactor-showcase-0.3"
 const SCENE_SECONDS = 10.0
 const SCENE_NAMES = ["REACTOR / geometry", "ORBITAL / moving objects", "FLUX / particles"]
 var output_path := ""
@@ -19,6 +19,7 @@ var camera: Camera3D
 var title: Label
 var detail: Label
 var finished := false
+var fullscreen_requested := false
 var tick := 0
 var hud_elapsed := 0.0
 
@@ -82,6 +83,8 @@ func _ready() -> void:
 			output_path = args[i + 1]
 		if args[i] == "--smoke-test":
 			smoke_test = true
+		if args[i] == "--presentation-fullscreen":
+			fullscreen_requested = true
 	if output_path.is_empty():
 		push_error("Showcase requires --output PATH")
 		get_tree().quit(2)
@@ -90,7 +93,12 @@ func _ready() -> void:
 		finish("unavailable", "A graphical display is required.")
 		return
 	get_tree().auto_accept_quit = false
+	# Fullscreen presentation must not scale the measured 3D workload.
+	get_window().content_scale_size = Vector2i(1280, 720)
+	get_window().content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT
+	get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
 	if DisplayServer.get_name() != "headless":
+		get_window().always_on_top = true
 		var icon := Image.new()
 		if icon.load_svg_from_string(FileAccess.get_file_as_string("res://brand/g3-mark.svg")) == OK:
 			DisplayServer.set_icon(icon)
@@ -223,6 +231,10 @@ func _ready() -> void:
 	set_physics_process(false)
 	warmup = 2.0
 	update_overlay()
+	if DisplayServer.get_name() != "headless":
+		if fullscreen_requested:
+			get_window().mode = Window.MODE_FULLSCREEN
+		get_window().grab_focus()
 
 func update_overlay() -> void:
 	title.text = "GAM3T3CH"
@@ -276,9 +288,17 @@ func finish(status: String, reason: String) -> void:
 		return
 	finished = true
 	set_process(false)
-	var size_value := get_window().size
+	if status == "passed" and fullscreen_requested and get_window().mode not in [Window.MODE_FULLSCREEN, Window.MODE_EXCLUSIVE_FULLSCREEN]:
+		status = "unavailable"
+		reason = "Fullscreen presentation was requested but the window manager did not retain it. Retry --windowed for a labelled windowed run."
+	var size_value := get_viewport().get_visible_rect().size
 	var result := {"workload_id": WORKLOAD_ID, "status": status, "reason": reason, "scored": false, "smoke_test": smoke_test, "engine_version": Engine.get_version_info().string, "renderer": RenderingServer.get_video_adapter_name(), "rendering_method": RenderingServer.get_current_rendering_method(), "width": size_value.x, "height": size_value.y, "msaa_3d": get_viewport().msaa_3d, "warmup_seconds_per_scene": 2, "scene_seconds": SCENE_SECONDS, "scenes": results}
 	var file := FileAccess.open(output_path, FileAccess.WRITE)
+	result["window_width"] = get_window().size.x
+	result["window_height"] = get_window().size.y
+	result["window_mode"] = get_window().mode
+	result["focus_requested"] = DisplayServer.get_name() != "headless"
+	result["fullscreen_requested"] = fullscreen_requested
 	if file:
 		file.store_string(JSON.stringify(result, "\t"))
 		file.close()

@@ -84,3 +84,22 @@ load. Physical Pi resource use still needs measurement. The real Godot scene
 was run on the development GPU and exited afterward; Pi rendering support is
 still unvalidated. Unit/integration tests cover inactive startup, local request
 authorization, shutdown, missing engines, unscored results and process waiting.
+
+## Suite 0.4.0 release-candidate changes
+
+Graphics defaults to fullscreen and requests foreground/topmost presentation;
+--windowed is explicit. Godot stretches a fixed 1280x720 viewport to the display
+with preserved aspect. Rendered dimensions and actual window dimensions/mode
+are recorded separately, and a requested fullscreen run that ends windowed is
+reported unavailable. The presentation change advances the optional workload to
+reactor-showcase-0.3. Older scene versions are separate comparison groups.
+
+Source bootstrap and standalone build recipes discover an installed/bundled
+Godot engine by file lookup only. Frozen dashboard workers launch the bundled
+application executable directly rather than treating it as a Python interpreter.
+
+The optional LAN inbox starts only on explicit Enable. Its selector also waits
+without a periodic timeout; uploaded result files are validated before saving.
+It exposes no benchmark execution endpoint. Uploads pause during a collector
+benchmark. Disabling/exiting stops the listener, while saved results persist.
+Actual standalone packages and physical LAN/Pi qualification remain pending.

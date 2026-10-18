@@ -18,18 +18,19 @@ static int reject(const char *status,const char *message){
     return 2;
 }
 int main(int argc,char **argv) {
-    int width=1280,height=720,fullscreen=0,counts[]={16,128,128,512,1024},scene;
+    int width=1280,height=720,fullscreen=1,counts[]={16,128,128,512,1024},scene;
     SDL_Window *window; SDL_GLContext ctx; GLuint program,buffer; GLint phase,aspect,offset,scale,light,ok;
     const GLfloat vertices[]={-1,-1,1,-1,-1,1,1,1};
-    for(int i=1;i<argc;i++){if(!strcmp(argv[i],"--compat")){width=640;height=360;}else if(!strcmp(argv[i],"--fullscreen"))fullscreen=1;else if(!strcmp(argv[i],"--probe"))probing=1;else return 1;}
+    for(int i=1;i<argc;i++){if(!strcmp(argv[i],"--compat")){width=640;height=360;}else if(!strcmp(argv[i],"--fullscreen"))fullscreen=1;else if(!strcmp(argv[i],"--windowed"))fullscreen=0;else if(!strcmp(argv[i],"--probe"))probing=1;else return 1;}
     if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER))return reject("unavailable",SDL_GetError());
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_ES);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,2); SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,0);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1); SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,0);
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE,8); SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,8); SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,8); SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,0); SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE,0);
-    window=SDL_CreateWindow("GAM3T3CH SBC Bench | GLES 2",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,width,height,SDL_WINDOW_OPENGL|(fullscreen?SDL_WINDOW_FULLSCREEN:0)|(probing?SDL_WINDOW_HIDDEN:0));
+    window=SDL_CreateWindow("GAM3T3CH 3D Benchmark | GLES 2",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,width,height,SDL_WINDOW_OPENGL|(fullscreen?SDL_WINDOW_FULLSCREEN:0)|(probing?SDL_WINDOW_HIDDEN:SDL_WINDOW_ALWAYS_ON_TOP));
     if(!window)return reject("unavailable",SDL_GetError());
+    if(!probing)SDL_RaiseWindow(window);
     ctx=SDL_GL_CreateContext(window); if(!ctx)return reject("unsupported",SDL_GetError());
     if(SDL_GL_SetSwapInterval(0)!=0)return reject("unsupported","Cannot disable vsync; requested graphics test is unsupported in this display configuration.");
     int actual_w,actual_h; SDL_GL_GetDrawableSize(window,&actual_w,&actual_h);

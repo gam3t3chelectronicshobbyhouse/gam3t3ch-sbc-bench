@@ -236,8 +236,13 @@ def run_storage(args):
         data["test_status"]["selection-" + str(index)] = {"status": entry["status"], "reason": entry["target"]["directory"] + ": " + entry["reason"]}
     start = time.monotonic()
     stop = threading.Event()
-    sampler = Sampler()
+    session = getattr(args, "_session", None)
+    if session:
+        session.attach(data, start)
+    sampler = None if session else Sampler()
     def sample():
+        if session:
+            return session.sample()
         value = sampler.sample()
         value.update(elapsed_seconds=round(time.monotonic() - start, 3), stage=data["stage"])
         data["telemetry"].append(value)
@@ -273,8 +278,9 @@ def run_storage(args):
             else:
                 data["configuration"]["background_load_accepted"] = args.as_configured
                 sample()
-                thread = threading.Thread(target=logger, daemon=True)
-                thread.start()
+                if not session:
+                    thread = threading.Thread(target=logger, daemon=True)
+                    thread.start()
                 for target in targets:
                     # Re-resolve immediately before writing: unplugged/remounted drives must not silently fall back to root.
                     entry = {"target": target, "status": "running", "tests": {}}

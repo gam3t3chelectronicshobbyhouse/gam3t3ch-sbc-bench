@@ -5,3 +5,5 @@ __pycache__/
 *.tmp
 .godot/
 *.gd.uid
+runtime/
+.gam3t3ch-install.json

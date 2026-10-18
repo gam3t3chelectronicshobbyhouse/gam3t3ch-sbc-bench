@@ -67,7 +67,7 @@ def run(args):
             "status": "preflight", "stage": "Idle check", "telemetry": [], "results": {}, "errors": {},
             "power": None, "scores": scores({}), "classification": "COMPATIBILITY" if args.compat else "BASELINE"}
     data["configuration"]["report_updates"] = "stage-boundaries-and-after-run"
-    data["configuration"].update(label=getattr(args, "label", "Stock baseline"), notes=getattr(args, "notes", ""))
+    data["configuration"].update(label=getattr(args, "label", "Stock baseline"), notes=getattr(args, "notes", ""), background_load_accepted=args.as_configured)
     result_path = folder / "result.json"
     report_path = folder / "report.html"
     stop = threading.Event()
@@ -76,8 +76,14 @@ def run(args):
         with publish_lock:
             atomic_json(result_path, data)
             export_report(data, report_path)
-    sampler = Sampler()
+    session = getattr(args, "_session", None)
+    if session:
+        session.attach(data, start)
+        data["classification"] = "FULL_COMPONENT"
+    sampler = None if session else Sampler()
     def sample():
+        if session:
+            return session.sample()
         value = sampler.sample()
         value.update(elapsed_seconds=round(time.monotonic() - start, 3), stage=data["stage"])
         data["telemetry"].append(value)
@@ -116,8 +122,9 @@ def run(args):
     if utilization is None:
         data["preflight"]["warning"] = "Idle utilization unavailable; comparison eligibility withheld"
     data["status"] = "running"
-    thread = threading.Thread(target=telemetry, daemon=True)
-    thread.start()
+    thread = None if session else threading.Thread(target=telemetry, daemon=True)
+    if thread:
+        thread.start()
     exit_status = 0
     try:
         for stage in ("cpu", "memory", "gpu"):
@@ -134,7 +141,7 @@ def run(args):
                     plan[stage] = check
                     continue
             plan[stage] = state("running", "Executing the fixed baseline workload.")
-            flags = [stage] if stage != "gpu" else (["--compat"] if args.compat else []) + (["--fullscreen"] if args.fullscreen else [])
+            flags = [stage] if stage != "gpu" else (["--compat"] if args.compat else []) + (["--fullscreen"] if args.fullscreen else ["--windowed"])
             try:
                 measurement = execute(tool, flags)
                 if stage == "gpu" and (measurement.get("suite_version") != VERSION or measurement.get("workload_id") != WORKLOAD):
@@ -154,7 +161,8 @@ def run(args):
         exit_status = 130
     finally:
         stop.set()
-        thread.join()
+        if thread:
+            thread.join()
         sample()
         data["duration_seconds"] = time.monotonic() - start
         data["stage"] = data["status"].title()
@@ -169,7 +177,7 @@ def run(args):
                                    "throttling_observed": any(v & 4 for v in bits) if bits else None,
                                    "historical_throttle_flag": any(v & (1 << 18) for v in bits) if bits else None,
                                    "frequency_reduction_samples": sum(b["cpu_mhz"] < a["cpu_mhz"] for a, b in zip(data["telemetry"], data["telemetry"][1:]) if a["cpu_mhz"] is not None and b["cpu_mhz"] is not None)}
-        data["comparison_eligible"] = (data["status"] == "complete" and data["classification"] == "BASELINE" and utilization is not None)
+        data["comparison_eligible"] = (not session and data["status"] == "complete" and data["classification"] == "BASELINE" and utilization is not None)
         atomic_json(result_path, data)
         export_report(data, report_path)
         with (folder / "summary.csv").open("w", newline="", encoding="utf-8") as handle:
@@ -183,18 +191,38 @@ def run(args):
 
 
 def main():
+    output_default = str(Path(os.environ.get("LOCALAPPDATA", str(Path.home() / ".local" / "share"))) / "GAM3T3CH" / "results") if getattr(sys, "frozen", False) else "results"
     parser = argparse.ArgumentParser(description="GAM3T3CH SBC Bench")
     parser.add_argument("--version", action="version", version=VERSION)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("detect", help="Print hardware and telemetry")
     sub.add_parser("drives", help="List connected Linux drives and writable filesystem candidates; no I/O test")
+    sub.add_parser("shortcuts", help="Create desktop/menu and uninstall shortcuts for an installed application")
+    uninstall = sub.add_parser("uninstall", help="Remove this user installation while retaining saved results")
+    uninstall.add_argument("--yes", action="store_true", help="Skip the interactive confirmation")
+    full = sub.add_parser("full", help="Run all implemented tests sequentially with continuous telemetry")
+    full.add_argument("--allow-writes", action="store_true")
+    full.add_argument("--skip-storage", action="store_true", help="Explicitly omit temporary-file drive tests")
+    full.add_argument("--target", action="append", help="Specific storage directories; default one eligible filesystem per drive")
+    full.add_argument("--size-mib", type=int, default=1024)
+    full.add_argument("--timeout", type=int, default=600)
+    full.add_argument("--headless", action="store_true")
+    full.add_argument("--compat", action="store_true")
+    full.add_argument("--fullscreen", dest="fullscreen", action="store_true", default=True)
+    full.add_argument("--windowed", dest="fullscreen", action="store_false")
+    full.add_argument("--as-configured", action="store_true")
+    full.add_argument("--godot")
+    full.add_argument("--label", default="Stock baseline")
+    full.add_argument("--notes", default="")
+    full.add_argument("--output", default=output_default)
+    full.add_argument("--open", action="store_true")
     storage = sub.add_parser("storage", help="Per-drive temporary-file read/write tests; requires fio on Linux")
     storage.add_argument("--all", action="store_true", help="One eligible filesystem per physical drive")
     storage.add_argument("--target", action="append", help="Existing test directory; repeat for multiple filesystems")
     storage.add_argument("--allow-writes", action="store_true", help="Acknowledge temporary-file writes on selected drives")
     storage.add_argument("--size-mib", type=int, default=1024, help="Fixed file and I/O bytes per stage in MiB (default 1024)")
     storage.add_argument("--timeout", type=int, default=600, help="Per-stage timeout in seconds; incomplete stages fail")
-    storage.add_argument("--output", default="results")
+    storage.add_argument("--output", default=output_default)
     storage.add_argument("--as-configured", action="store_true")
     storage.add_argument("--label", default="Stock baseline")
     storage.add_argument("--notes", default="")
@@ -202,12 +230,13 @@ def main():
     ui = sub.add_parser("ui", help="Launch the lightweight local dashboard")
     ui.add_argument("--port", type=int, default=0, help="Loopback port; 0 selects a free port")
     ui.add_argument("--no-open", action="store_true")
-    ui.add_argument("--output", default="results")
+    ui.add_argument("--output", default=output_default)
     ui.add_argument("--godot", help="Optional Godot 4 executable; no engine is launched while idle")
     showcase = sub.add_parser("showcase", help="Optional Godot 4 reactor scene; separate, unscored FPS")
     showcase.add_argument("--godot", help="Godot 4 executable, or set G3BENCH_GODOT")
-    showcase.add_argument("--output", default="results")
-    showcase.add_argument("--fullscreen", action="store_true")
+    showcase.add_argument("--output", default=output_default)
+    showcase.add_argument("--fullscreen", dest="fullscreen", action="store_true", default=True, help="Fullscreen presentation (default)")
+    showcase.add_argument("--windowed", dest="fullscreen", action="store_false", help="Use a window instead of fullscreen")
     showcase.add_argument("--as-configured", action="store_true")
     showcase.add_argument("--open", action="store_true")
     showcase.add_argument("--smoke-test", action="store_true", help="Headless scene validation only; no performance result")
@@ -216,13 +245,15 @@ def main():
     check = sub.add_parser("check", help="Detect board and check test availability without benchmarking")
     check.add_argument("--headless", action="store_true")
     check.add_argument("--compat", action="store_true")
-    check.add_argument("--fullscreen", action="store_true")
+    check.add_argument("--fullscreen", dest="fullscreen", action="store_true", default=True)
+    check.add_argument("--windowed", dest="fullscreen", action="store_false")
     quick = sub.add_parser("quick", help="Fixed CPU, memory and optional GPU run")
     quick.add_argument("--headless", action="store_true")
     quick.add_argument("--compat", action="store_true", help="640x360 GPU; excluded from official GPU scoring")
-    quick.add_argument("--fullscreen", action="store_true")
+    quick.add_argument("--fullscreen", dest="fullscreen", action="store_true", default=True, help="Fullscreen graphics (default)")
+    quick.add_argument("--windowed", dest="fullscreen", action="store_false")
     quick.add_argument("--as-configured", action="store_true", help="Accept background load and label the run")
-    quick.add_argument("--output", default="results")
+    quick.add_argument("--output", default=output_default)
     quick.add_argument("--open", action="store_true", help="Open the report after measurement finishes")
     quick.add_argument("--label", default="Stock baseline")
     quick.add_argument("--notes", default="")
@@ -230,6 +261,15 @@ def main():
     report.add_argument("result", type=Path)
     args = parser.parse_args()
     try:
+        if args.command == "shortcuts":
+            from .integration import run_shortcuts
+            return run_shortcuts(args)
+        if args.command == "uninstall":
+            from .uninstall import run_uninstall
+            return run_uninstall(args)
+        if args.command == "full":
+            from .full import run_full
+            return run_full(args)
         if args.command == "drives":
             from .storage import discover
             print(json.dumps({"drives": discover()}, indent=2))

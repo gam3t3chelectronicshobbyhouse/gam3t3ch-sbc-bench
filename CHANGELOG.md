@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.4.0
+
+- Default graphics to fullscreen, with focus/topmost requests and an explicit
+  windowed override. Godot uses a fixed 720p internal viewport; the new
+  reactor-showcase-0.3 records internal/window dimensions and presentation mode.
+- Add shared Linux/macOS/Windows source-bootstrap code, public copyable
+  install/start commands, and optional pinned Godot runtime discovery.
+- Add standalone Windows setup/ZIP and Linux ARM64/x86-64 tar build recipes,
+  bundled Python/Godot/license notices, checksum manifests and a draft-release
+  workflow. Windows standalone includes the runtime and has passed a real
+  frozen full checkup with bundled Godot 4.4.1 fullscreen rendering.
+- Add a full checkup sequence with continuous telemetry and component reports.
+- Add desktop/menu shortcuts, a menu uninstaller, and result-preserving source
+  uninstall support. Windows setup defaults to creating the desktop shortcut.
+- Add offline branded stats PNG export and printable full reports, with raw
+  measurements, availability reasons, versions and methodology references.
+- Add an explicitly enabled LAN results inbox: token-authenticated JSON uploads,
+  generated file paths, offline comparison reports, manual refresh and clean
+  shutdown. No remote test execution. Physical-network validation is pending.
+- Document installation, launch, per-unit testing, result collection, real
+  measurement limits, data paths, updates and uninstalling in the README.
+
 ## 0.3.0
 
 - Add connected-drive discovery and separate file-only fio tests: sequential and

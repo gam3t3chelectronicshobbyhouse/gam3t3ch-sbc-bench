@@ -38,3 +38,10 @@ Suite 0.3.0 adds separate per-drive file tests and tuning telemetry. See
 [storage and tuning](STORAGE_AND_TUNING.md). Storage is unscored and is not
 part of baseline overall. Native workload counts remain unchanged; compare
 matching suite versions because telemetry reads changed.
+
+Suite 0.4.0 reports also separate fullscreen/windowed
+presentation in baseline comparison groups. Native counts/constants remain
+unchanged. Optional reactor-showcase-0.3 and storage remain unscored. Binary
+installer checks passed on Windows; physical Pi validation remains pending.
+Full checkup retains the portable CPU/memory/GPU scores where valid, with a
+separate mode/workload identity. It does not add storage or Godot into overall.

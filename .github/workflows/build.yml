@@ -13,6 +13,8 @@ jobs:
           cmake --build build --parallel 2
           test -x build/g3bench-gpu
       - name: Tests and installer syntax
+        env:
+          G3BENCH_RUN_SOCKET_TESTS: '1'
         run: |
           python3 -m unittest discover -s tests -v
           bash -n install.sh

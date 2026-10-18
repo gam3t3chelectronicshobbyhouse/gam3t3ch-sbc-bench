@@ -67,3 +67,18 @@ Suite 0.3.0 adds separate per-drive file tests and tuning telemetry. See
 [storage and tuning](STORAGE_AND_TUNING.md). Storage is unscored and is not
 part of baseline overall. Native workload counts remain unchanged; compare
 matching suite versions because telemetry reads changed.
+
+Suite 0.4.0 presentation defaults to fullscreen. Native GLES2
+still requires an exact 1280x720 drawable. Optional Godot reactor-showcase-0.3
+uses a fixed 720p internal viewport with fullscreen scaling/letterboxing; actual
+window size and presentation mode are recorded separately. A requested
+fullscreen scene ending windowed is unavailable. See IDLE_AND_SHOWCASE.md and
+FINAL_PASS_STATUS.md for validation limits.
+
+Full checkup (`full-checkup-0.1`) runs the portable, storage and Godot components
+sequentially using a single continuous telemetry sampler. Component stage names
+and timestamps are retained, including gaps between workloads. Components do not
+start a second sampler. Component idle checks remain in place. This combined
+session is a distinct comparison mode and is not baseline-comparison eligible;
+match full sessions and their component configurations when comparing changes.
+Storage and Godot remain unscored. Interrupted runs preserve completed work.

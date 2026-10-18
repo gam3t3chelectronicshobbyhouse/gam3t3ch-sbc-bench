@@ -15,6 +15,9 @@ jobs:
       - name: Validate real GLES shader compilation and linking under Mesa
         run: |
           xvfb-run -a env SDL_VIDEODRIVER=x11 LIBGL_ALWAYS_SOFTWARE=1 python3 -c "import subprocess,json; p=subprocess.run(['build/g3bench-gpu','--probe','--windowed'],capture_output=True,text=True,timeout=30); print('return',p.returncode,'stdout',repr(p.stdout),'stderr',p.stderr); r=json.loads(p.stdout); assert r['status']=='ready',r"
+      - name: Run all five actual GLES scenes under Mesa
+        run: |
+          xvfb-run -a env SDL_VIDEODRIVER=x11 LIBGL_ALWAYS_SOFTWARE=1 python3 -c "import subprocess,json; p=subprocess.run(['build/g3bench-gpu','--windowed'],capture_output=True,text=True,timeout=90); print(p.stderr); assert p.returncode==0,p; r=json.loads(p.stdout); assert len(r['scenes'])==5 and all(s['average_fps']>0 for s in r['scenes']),r; print(r['renderer'],r['display_server'],r['vsync'],r['pacing_limited'])"
       - name: Tests and installer syntax
         env:
           G3BENCH_RUN_SOCKET_TESTS: '1'

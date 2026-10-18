@@ -1,4 +1,4 @@
-# 0.5.1 handoff
+# 0.5.2 handoff
 
 The Gaia image motivated a GLES shader-precision fix with full linker errors and
 bounded random-drive workloads. The original JSON/log is needed to confirm the

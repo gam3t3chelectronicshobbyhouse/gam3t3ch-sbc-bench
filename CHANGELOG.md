@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.2
+
+- Preserve readable report/card contrast in paper/PDF styles and exercise all
+  five real GLES scenes in Linux CI, in addition to the shader probe.
+- Publish this patch after qualification drafts 0.5.0/0.5.1; their tags remain
+  available for build history, with no public installer release claimed.
+
 ## 0.5.1
 
 - Handle scalar checksum metadata when comparing raw memory workloads; preserve

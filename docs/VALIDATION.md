@@ -1,6 +1,6 @@
 # Validation — 2026-10-18
 
-## Suite 0.5.1
+## Suite 0.5.2
 
 Local Windows regression: 57 tests, 55 passed and Linux-only fio/iperf3
 integrations skipped. Includes actual bounded SHA256 load, network consent and

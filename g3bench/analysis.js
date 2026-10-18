@@ -23,7 +23,7 @@
       const delta=old&&old.value>0?((value/old.value-1)*100):null;
       row('raw-comparison',[title,name,fmt(value,2)+' '+unit,(delta===null?'Reference':(delta>=0?'+':'')+fmt(delta,1)+'%'+(lower?' · lower is better':''))+' · group '+reference.index]);
     }
-    for(const category of ['cpu','memory'])for(const [name,v] of Object.entries(r.results[category]??{}))if(v&&'value'in v)metric(category+' / '+name,v.value,v.unit,[r.native_build?.workload_id??'baseline-0.1',category==='memory'?r.configuration.memory_buffer_bytes:null,r.configuration.threads??1]);
+    for(const category of ['cpu','memory'])for(const [name,v] of Object.entries(r.results[category]??{}))if(v&&typeof v==='object'&&'value'in v)metric(category+' / '+name,v.value,v.unit,[r.native_build?.workload_id??'baseline-0.1',category==='memory'?r.configuration.memory_buffer_bytes:null,r.configuration.threads??1]);
     for(const scene of r.results.gpu?.scenes??[])metric('GLES / scene '+scene.scene,scene.average_fps,'FPS',[r.native_build?.workload_id??r.workload_id,r.results.gpu.width,r.results.gpu.height,r.configuration.fullscreen]);
     const g=r.results.showcase;for(const scene of g?.scenes??[])metric('Godot / '+scene.name,scene.average_fps,'FPS',[g.workload_id,g.engine_version,g.rendering_method,g.rendering_driver??'opengl3',g.width,g.height,r.configuration.fullscreen]);
     const c=r.results.storage?.configuration??r.configuration;

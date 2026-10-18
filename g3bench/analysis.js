@@ -25,7 +25,7 @@
       row('raw-comparison',[title,name,fmt(value,2)+' '+unit,(delta===null?'Reference':(delta>=0?'+':'')+fmt(delta,1)+'%'+(lower?' · lower is better':''))+' · group '+reference.index]);
     }
     for(const category of ['cpu','memory'])for(const [name,v] of Object.entries(r.results[category]??{}))if(v&&typeof v==='object'&&'value'in v)metric(category+' / '+name,v.value,v.unit,[r.native_build?.workload_id??'baseline-0.1',category==='memory'?r.configuration.memory_buffer_bytes:null,r.configuration.threads??1]);
-    for(const scene of r.results.gpu?.scenes??[])metric('GLES / scene '+scene.scene,scene.average_fps,'FPS',[r.benchmark_version,r.native_build?.workload_id??r.workload_id,r.results.gpu.width,r.results.gpu.height,r.configuration.fullscreen,r.results.gpu.vsync]);
+    for(const scene of r.results.gpu?.scenes??[])metric('GLES / scene '+scene.scene,scene.average_fps,'FPS',[r.benchmark_version,r.native_build?.workload_id??r.workload_id,r.results.gpu.width,r.results.gpu.height,r.configuration.fullscreen,r.results.gpu.vsync,r.results.gpu.pacing_limited]);
     const g=r.results.showcase;for(const scene of g?.scenes??[])metric('Godot / '+scene.name,scene.average_fps,'FPS',[g.workload_id,g.engine_version,g.rendering_method,g.rendering_driver??'opengl3',g.width,g.height,r.configuration.fullscreen]);
     const c=r.results.storage?.configuration??r.configuration;
     for(const d of r.results.storage?.drives??[])for(const [name,v] of Object.entries(d.tests??{}))if(v.status==='passed')metric('Drive '+(d.target.model??d.target.media??'')+' / '+name,v.mb_s,'MB/s',[c.storage_workload??r.workload_id,c.size_mib,c.random_seconds,c.direct,c.ioengine,c.iodepth,c.fio_version]);

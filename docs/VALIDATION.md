@@ -1,8 +1,8 @@
 # Validation — 2026-10-18
 
-## Suite 0.5.0
+## Suite 0.5.1
 
-Local Windows regression: 56 tests, 54 passed and Linux-only fio/iperf3
+Local Windows regression: 57 tests, 55 passed and Linux-only fio/iperf3
 integrations skipped. Includes actual bounded SHA256 load, network consent and
 transfer arithmetic, both-direction iperf argument/rate handling, profile
 selection, and continuation of independent drive reads after random-write errors.

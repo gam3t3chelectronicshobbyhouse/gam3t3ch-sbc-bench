@@ -157,7 +157,7 @@ def run(args):
                 if stage == "gpu" and (measurement.get("suite_version") != VERSION or measurement.get("workload_id") != WORKLOAD):
                     raise RuntimeError("GPU suite/workload mismatch. Rebuild the native tools.")
                 data["results"][stage] = measurement
-                if stage=="gpu" and measurement.get("vsync"):data["classification"]="DISPLAY_PACED"
+                if stage=="gpu" and (measurement.get("vsync") or measurement.get("pacing_limited")):data["classification"]="DISPLAY_PACED"
                 plan[stage] = state("passed", "Completed the fixed workload successfully; low performance is still a valid result.")
             except (RuntimeError, OSError, subprocess.SubprocessError, ValueError) as exc:
                 data["errors"][stage] = str(exc)

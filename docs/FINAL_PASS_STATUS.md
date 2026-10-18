@@ -1,4 +1,4 @@
-# 0.5.0 handoff
+# 0.5.1 handoff
 
 The Gaia image motivated a GLES shader-precision fix with full linker errors and
 bounded random-drive workloads. The original JSON/log is needed to confirm the
@@ -12,7 +12,7 @@ counter charts, stage thermal summaries, raw cross-board comparisons and repeat
 median/range/N included in browser PDF printing. No overclock/system tweak is
 applied automatically. CPU/RAM normalization stays common across boards.
 
-Local Windows checks: 56 tests, 54 pass and Linux fio/iperf integrations skipped;
+Local Windows checks: 57 tests, 55 pass and Linux fio/iperf integrations skipped;
 actual CPU/load/full/HTTP execution and bundled Godot 4.4.1 fullscreen Vulkan
 execution passed for available components. Full mode retained one sensor trace;
 Windows-inapplicable sensors/GLES/fio remained unavailable. Updated package CI

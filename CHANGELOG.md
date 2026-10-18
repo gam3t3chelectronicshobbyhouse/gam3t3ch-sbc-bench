@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.1
+
+- Handle scalar checksum metadata when comparing raw memory workloads; preserve
+  baseline CPU points when a sustained-load component is also present.
+- Run vsync-limited/unverified GLES as labelled raw measurements, withhold
+  GPU/overall points, retain actual SDL swap interval and flush probe output.
+- Improve human-readable diagnostic summaries and separate GPU comparison groups
+  across suite versions. 0.5.0 remained an unpublished qualification draft.
+
 ## 0.5.0
 
 - Correct shared GLES shader precision and retain full program-link diagnostics.

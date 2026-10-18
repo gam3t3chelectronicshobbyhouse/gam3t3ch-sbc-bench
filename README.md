@@ -6,13 +6,16 @@ Tests run on the machine being measured. Reports contain measured rates and
 sensor readings; unavailable measurements stay unavailable rather than being
 replaced with estimates or demo values.
 
-**0.5.0 testing source.** Standalone packages embed Godot 4.4.1, so the editor
+**0.5.1 testing source.** Standalone packages embed Godot 4.4.1, so the editor
 is not needed. Source CPU/load/full runs, real HTTP transfer and bundled-engine
 Vulkan checks have passed on Windows. Updated standalone CI qualification and
 Gaia's physical rerun are tracked in [validation](docs/VALIDATION.md).
 
-## 0.5.0: diagnostics, sustained load and useful comparisons
+## 0.5.1: diagnostics, sustained load and useful comparisons
 
+- If a compositor cannot disable/verify vsync, GLES still runs with explicit
+  display-pacing metadata and raw FPS; GPU/overall points are withheld. The
+  report does not mistake a display-rate cap for the board's GPU ceiling.
 - **CPU only / RAM only / Portable GPU only** run independently. Reactor Lab
   remains a separate scene test; its mean FPS is visible even without a baseline
   GPU score. Godot Compatibility uses OpenGL, not Vulkan. Choose **Vulkan Mobile**
@@ -98,14 +101,14 @@ driver. A missing Godot/GPU must not prevent independent CPU/memory tests.
 
 The package workflow builds these platform-specific artifacts:
 
-- `GAM3T3CH-0.5.0-windows-x86_64-setup.exe`
-- `GAM3T3CH-0.5.0-windows-x86_64.zip`
-- `GAM3T3CH-0.5.0-linux-aarch64.tar.gz`
-- `GAM3T3CH-0.5.0-linux-x86_64.tar.gz`
+- `GAM3T3CH-0.5.1-windows-x86_64-setup.exe`
+- `GAM3T3CH-0.5.1-windows-x86_64.zip`
+- `GAM3T3CH-0.5.1-linux-aarch64.tar.gz`
+- `GAM3T3CH-0.5.1-linux-x86_64.tar.gz`
 
 Use the package matching the **OS architecture**, not just the board's processor.
 Download it and the corresponding SHA256SUMS file from the
-[0.5.0 release page](https://github.com/gam3t3chelectronicshobbyhouse/gam3t3ch-sbc-bench/releases/tag/v0.5.0).
+[0.5.1 release page](https://github.com/gam3t3chelectronicshobbyhouse/gam3t3ch-sbc-bench/releases/tag/v0.5.1).
 
 Windows: run the setup executable as your normal user, then open GAM3T3CH from
 the desktop or Start menu. The desktop shortcut is selected by default; the
@@ -116,7 +119,7 @@ Keep its `_internal` folder beside the executable.
 Linux: extract the matching tar file into a user-owned folder and run:
 
 ```sh
-tar -xzf GAM3T3CH-0.5.0-linux-aarch64.tar.gz
+tar -xzf GAM3T3CH-0.5.1-linux-aarch64.tar.gz
 ./GAM3T3CH/GAM3T3CH
 ```
 

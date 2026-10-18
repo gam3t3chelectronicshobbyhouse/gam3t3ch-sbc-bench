@@ -21,7 +21,7 @@ def scores(results, compatibility=False):
         if all(key in data for key in constants):
             out[group] = geometric([1000 * data[key]["value"] / reference for key, reference in constants.items()])
     gpu = results.get("gpu", {})
-    if not compatibility and not gpu.get("vsync",False) and gpu.get("width") == 1280 and gpu.get("height") == 720 and len(gpu.get("scenes", [])) == 5:
+    if not compatibility and not gpu.get("vsync",False) and not gpu.get("pacing_limited",False) and gpu.get("width") == 1280 and gpu.get("height") == 720 and len(gpu.get("scenes", [])) == 5:
         out["gpu"] = geometric([1000 * scene["average_fps"] / 60 for scene in gpu["scenes"]])
     # The baseline compute aggregate requires every implemented compute subsystem.
     if all(out[key] is not None for key in ("cpu", "memory", "gpu")):

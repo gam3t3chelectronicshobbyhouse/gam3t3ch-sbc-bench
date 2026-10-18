@@ -40,8 +40,8 @@ int main(int argc,char **argv) {
     glGenBuffers(1,&buffer);glBindBuffer(GL_ARRAY_BUFFER,buffer);glBufferData(GL_ARRAY_BUFFER,sizeof vertices,vertices,GL_STATIC_DRAW);glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,0);glEnableVertexAttribArray(0);
     glViewport(0,0,width,height);glUniform1f(aspect,(float)width/height);
     if(probing&&glGetError()!=GL_NO_ERROR)return reject("unsupported","GLES2 workload setup failed.");
-    printf("{\"suite_version\":\"" G3_SUITE_VERSION "\",\"workload_id\":\"" G3_WORKLOAD_ID "\",\"renderer\":");json_string((const char*)glGetString(GL_RENDERER));printf(",\"driver\":");json_string((const char*)glGetString(GL_VERSION));printf(",\"width\":%d,\"height\":%d,\"vsync\":%s",width,height,paced?"true":"false");
-    printf(",\"display_server\":");json_string(SDL_GetCurrentVideoDriver());
+    printf("{\"suite_version\":\"" G3_SUITE_VERSION "\",\"workload_id\":\"" G3_WORKLOAD_ID "\",\"renderer\":");json_string((const char*)glGetString(GL_RENDERER));printf(",\"driver\":");json_string((const char*)glGetString(GL_VERSION));printf(",\"width\":%d,\"height\":%d,\"vsync\":%s",width,height,SDL_GL_GetSwapInterval()!=0?"true":"false");
+    printf(",\"display_server\":");json_string(SDL_GetCurrentVideoDriver());printf(",\"pacing_limited\":%s,\"reported_swap_interval\":%d",paced?"true":"false",SDL_GL_GetSwapInterval());
     if(probing){printf(",\"status\":\"ready\",\"reason\":\"GLES2 context, shaders and resolution available. Actual vsync state is recorded; display-paced runs remain unscored.\"}");fflush(stdout);glDeleteBuffers(1,&buffer);glDeleteProgram(program);SDL_GL_DeleteContext(ctx);SDL_DestroyWindow(window);SDL_Quit();return 0;}
     printf(",\"scenes\":[");
     for(scene=0;scene<5;scene++) {

@@ -28,6 +28,7 @@
         }
       }
       const n=data.results.network;if(n)for(const key of ['download_mbps','upload_mbps','latency_ms'])measurements.push(['Network / '+key,number(n[key]),key==='latency_ms'?'HTTP response latency · ms':'HTTPS transfer · Mbps']);
+      const load=data.results.load;if(load)measurements.push(['Sustained SHA256 / '+load.workers+' workers',number(load.mb_s)+' MB/s',number(load.seconds,2)+' s · unscored']);
       const statuses = Object.entries(data.test_status ?? {});
       const fields = [['temperature_c', 'Temperature', '°C', 1, '#62efd0'], ['cpu_mhz', 'CPU frequency', 'MHz', 1, '#b6a1ff'],
         ['cpu_utilization', 'CPU load', '%', 1, '#63b8ff'], ['memory_used_bytes', 'RAM in use', 'MiB', 1048576, '#ffca85'],

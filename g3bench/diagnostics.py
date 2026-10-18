@@ -51,7 +51,7 @@ def advice(data):
     bits=[s.get('throttled_bits') for s in data.get('telemetry',[]) if isinstance(s.get('throttled_bits'),int)]
     if any(b & 1 for b in bits): add('warning','Undervoltage observed','Check the rated power supply, USB-C cable and peripheral power budget before tuning clocks.')
     if any(b & 4 for b in bits): add('warning','Active throttling observed','Inspect heatsink contact, fan operation and airflow, and rerun from a similar starting temperature.')
-    policies=data.get('hardware',{}).get('tuning',{}).get('cpu_policies',[])
+    policies=(data.get('hardware',{}).get('tuning') or {}).get('cpu_policies',[]) or []
     if any(p.get('scaling_governor') in ('ondemand','powersave') for p in policies):
         add('info','Frequency policy recorded','Governor ramp-up can affect short CPU tests. Compare a documented performance-governor run only within stock frequency limits; do not change it silently, and restore the original policy afterward.')
     for drive in data.get('results',{}).get('storage',{}).get('drives',[]):

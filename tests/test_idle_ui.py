@@ -60,6 +60,19 @@ class IdleDashboardTests(unittest.TestCase):
                 code, _ = request("POST", "/start", '{"kind":"arbitrary-command"}', headers)
                 self.assertEqual(code, 400)
                 self.assertEqual(dashboard.snapshot()["phase"], "idle")
+                code, _ = request("POST", "/iperf/start", '{"address":"127.0.0.1"}')
+                self.assertEqual(code, 403)
+                code, _ = request("POST", "/iperf/start", '{"address":"0.0.0.0"}', headers)
+                self.assertEqual(code, 400)
+                with patch.object(dashboard.iperf_server, 'start', return_value={'running': True}) as start_server:
+                    code, _ = request("POST", "/iperf/start", '{"address":"127.0.0.1","port":55201}', headers)
+                    self.assertEqual(code, 200)
+                    start_server.assert_called_once_with('127.0.0.1', 55201)
+                    dashboard.phase = 'running'
+                    code, _ = request("POST", "/iperf/start", '{"address":"127.0.0.1"}', headers)
+                    self.assertEqual(code, 400)
+                    self.assertEqual(start_server.call_count, 1)
+                    dashboard.phase = 'idle'
                 popen.assert_not_called()
             finally:
                 if token:

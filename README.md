@@ -66,8 +66,27 @@ estimate. Response-start latency and its standard deviation are HTTP metrics,
 not ICMP ping, packet loss or loaded-latency measurements. No benchmark result
 or system metadata is uploaded to Cloudflare.
 
-For a LAN test, install `iperf3` on both machines. Run `iperf3 -s` on the peer,
-then enter its address in the dashboard's LAN server field. This runs one TCP
+For a LAN test, install `iperf3` on both machines. The dashboard's **LAN speed-test
+setup** panel includes a copyable Raspberry Pi OS / Debian install command.
+Choose **No** at the installer prompt to start an iperf3 daemon automatically;
+it is unnecessary for temporary dashboard hosting.
+
+On the receiving machine, click **Refresh setup**, check its local IPv4 address
+and port, then **Start server on this machine**. Copy its address into the
+measured Pi's **Optional LAN iperf3 server** field, use the same port, acknowledge
+network traffic, then click **Test network only** or **Full checkup**. The setup
+panel also provides a copyable `iperf3 -s -p 5201` command for a server without
+GAM3T3CH; stop that manually with Ctrl+C. Buttons only control this dashboard's
+own machine, never execute commands on another unit.
+
+**Stop server** or **Exit dashboard** stops the server started by this app.
+An existing system daemon is never stopped; if its port is occupied, stop it
+yourself or choose a different port on both units. Hosting blocks benchmarks
+on that machine until stopped, to avoid contaminating measurements. There is
+no idle polling; use Refresh setup to check for an unexpected server exit.
+Windows requires a separately installed iperf3 executable on PATH.
+
+This runs one TCP
 stream for 10 seconds in each direction and retains iperf3 JSON. Traffic volume
 scales with link speed. The peer must be reachable on its iperf3 port (5201);
 no firewall rule or persistent server is installed by GAM3T3CH.

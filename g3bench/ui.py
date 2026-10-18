@@ -22,6 +22,7 @@ from .report import export_report
 from .scoring import scores
 from .branding import apply_branding, PRODUCT_NAME
 from .install_commands import INSTALL_COMMANDS
+from .iperf_server import IperfServer
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -42,6 +43,7 @@ class Dashboard:
         self.report_path = None
         self.cancel_requested = False
         self.inbox = None  # LAN listener exists only after explicit Enable.
+        self.iperf_server = IperfServer()
 
     def snapshot(self):
         with self.lock:
@@ -65,12 +67,15 @@ class Dashboard:
                 raise ValueError("Acknowledge temporary-file writes before starting storage tests")
         if type(options.get('load_seconds',60)) is not int or not 1<=options.get('load_seconds',60)<=600:raise ValueError('Load duration must be 1–600 seconds')
         if options.get('iperf_host') and (not isinstance(options['iperf_host'],str) or len(options['iperf_host'])>253):raise ValueError('Invalid iperf host')
+        if type(options.get('iperf_port',5201)) is not int or not 1<=options.get('iperf_port',5201)<=65535:raise ValueError('Invalid iperf port')
         if options.get('profile','auto') not in {'auto','standard','legacy'}:raise ValueError('Invalid test profile')
         if options.get('renderer','compatibility') not in {'compatibility','vulkan'}:raise ValueError('Invalid renderer')
         if kind == 'network' and options.get('allow_network') is not True:raise ValueError('Acknowledge external network traffic first')
         with self.lock:
             if self.phase == "running":
                 raise ValueError("A benchmark is already running")
+            if self.iperf_server.snapshot()['running']:
+                raise ValueError("Stop the temporary iperf3 server before benchmarking this machine")
             if kind == "showcase" and not self.engine:
                 raise ValueError("Godot 4 not found. Start the dashboard with --godot PATH.")
             self.phase = "running"
@@ -89,7 +94,7 @@ class Dashboard:
             command += ["--label=" + options.get("label", "Stock baseline"), "--notes=" + options.get("notes", "")]
             if kind in {'quick','graphics','cpu','memory','full'}:command += ['--profile',options.get('profile','auto')]
             if kind in {'showcase','full'}:command += ['--renderer',options.get('renderer','compatibility')]
-            if kind in {'network','full'} and options.get('iperf_host'):command += ['--iperf-host',options['iperf_host']]
+            if kind in {'network','full'} and options.get('iperf_host'):command += ['--iperf-host',options['iperf_host'],'--iperf-port',str(options.get('iperf_port',5201))]
             if kind in {'full','load'}:command += ['--load-seconds',str(options.get('load_seconds',60))]
             if kind in {'network','full'} and options.get('allow_network') is True:command += ['--allow-network']
             if kind == "showcase":
@@ -232,6 +237,8 @@ def serve(args, ready=None):
                     return self.reply({"drives": discover(), "reason": "Drive tests require Linux / Raspberry Pi OS." if os.name == "nt" else None})
                 except (OSError, ValueError) as exc:
                     return self.reply({"error": str(exc)}, 400)
+            if route.path == "/iperf/setup":
+                return self.reply(dashboard.iperf_server.setup())
             if route.path == "/inbox":
                 return self.reply(dashboard.inbox.snapshot() if dashboard.inbox else {"enabled": False, "results": []})
             if route.path == "/inbox/compare":
@@ -275,6 +282,13 @@ def serve(args, ready=None):
                     dashboard.start(data.get("kind"), data.get("headless", False), data.get("fullscreen", True), data.get("as_configured", False), options)
                 elif self.path == "/cancel":
                     dashboard.cancel()
+                elif self.path in {"/iperf/start", "/iperf/stop"}:
+                    with dashboard.lock:
+                        if dashboard.phase == "running":
+                            raise ValueError("Wait for the active benchmark before changing the iperf3 server")
+                        if self.path == "/iperf/start":
+                            return self.reply(dashboard.iperf_server.start(data.get("address"), data.get("port", 5201)))
+                        return self.reply(dashboard.iperf_server.close())
                 elif self.path == "/inbox/start":
                     if dashboard.snapshot()["phase"] == "running":
                         raise ValueError("Wait for the active test before enabling the results inbox")
@@ -325,6 +339,7 @@ def serve(args, ready=None):
     except KeyboardInterrupt:
         dashboard.cancel()
     finally:
+        dashboard.iperf_server.close()
         if dashboard.inbox:
             dashboard.inbox.close()
         if dashboard.worker:

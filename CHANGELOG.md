@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.3
+
+- Add dashboard LAN iperf3 setup, copyable dependency/server commands and peer
+  address, with configurable server/client ports.
+- Explicit temporary Start/Stop controls bind a chosen local IPv4 address;
+  Exit cleans up the owned process without touching existing daemons.
+- Block benchmarks while hosting, preserve idle sleep, and test local route
+  authorization, invalid input, port conflicts and owned-process lifecycle.
+
 ## 0.5.2
 
 - Preserve readable report/card contrast in paper/PDF styles and exercise all

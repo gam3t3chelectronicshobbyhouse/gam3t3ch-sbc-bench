@@ -61,14 +61,17 @@ class FeatureTests(unittest.TestCase):
     def test_real_loopback_iperf_both_directions(self):
         with socket.socket() as sock:
             sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
-        server=subprocess.Popen([shutil.which('iperf3'),'--server','--port',str(port)],stdout=subprocess.DEVNULL,stderr=subprocess.PIPE)
+        from g3bench.iperf_server import IperfServer
+        server=IperfServer()
+        server.start('127.0.0.1',port)
         try:
-            time.sleep(0.5)
             result=measure_iperf('127.0.0.1',lambda x:None,lambda:None,port)
             self.assertEqual(result['status'],'passed',result)
             self.assertGreater(result['upload_mbps'],0);self.assertGreater(result['download_mbps'],0)
         finally:
-            server.terminate();server.communicate(timeout=5)
+            server.close()
+            self.assertFalse(server.snapshot()['running'])
+            self.assertFalse(server.watcher.is_alive())
     def test_actual_bounded_load_records_throughput_and_stops(self):
         with tempfile.TemporaryDirectory(dir=ROOT/'build') as folder:
             self.assertEqual(run_load(argparse.Namespace(load_seconds=1,workers=2,output=folder,open=False)),0)

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(gam3t3ch_sbc_bench VERSION 0.5.2 LANGUAGES C)
+project(gam3t3ch_sbc_bench VERSION 0.5.3 LANGUAGES C)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 add_executable(g3bench-native native/bench.c)

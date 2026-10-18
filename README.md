@@ -14,6 +14,33 @@ reactor showcase. The CLI works without the graphical interface.
 Per-drive storage tests use optional fio on Linux. Network, endurance, controlled
 memory-pressure testing and manual power entry remain later milestones.
 
+## Running on a PC or several Raspberry Pis
+
+The dashboard runs on the machine where you start `g3bench ui`. Its address is
+`http://127.0.0.1:PORT`; use the port printed in the terminal. Localhost always
+means the current machine. Benchmarks measure that machine's CPU, memory,
+graphics and selected drives.
+
+| Use case | Current support |
+| --- | --- |
+| Benchmark a Raspberry Pi or other Linux SBC | Install and run the suite on that board; available tests depend on its capabilities. |
+| Benchmark a Linux PC | Build/run on the PC using the same Linux instructions. The installer supports Debian-family distributions, including x86-64 PCs. Hardware qualification is still pending. |
+| Use a Windows PC | Dashboard/report development, locally compiled native CPU/memory tests and the optional compatible Godot showcase are supported for development. Linux telemetry and fio drive tests are unavailable; Windows runs are excluded from baseline comparisons. The shell installer is Linux-only. |
+| View results on a PC | Open a saved standalone `report.html` in a current browser on Windows, Linux or macOS. Viewing reports needs no benchmark installation, Python or running dashboard. macOS benchmark execution is not currently validated. |
+| Test several Pis | Install the suite on each Pi and run its tests there. Copy the saved results to one PC for comparison. |
+
+For example, run the same suite version on your Pi 3, Pi 4 and Pi 5. Preserve
+each run's `result.json` and `report.html`, copy them into separate folders on
+your PC, open one report, and use **Compare saved runs** to load the JSON files.
+Storage runs also populate the drive comparison bars. Match workloads and
+settings when comparing performance; the report keeps incompatible groups
+separate. No files are uploaded by this workflow.
+
+A single PC installation currently does not discover, remotely start tests on,
+or automatically collect results from other Pis. Central control would require
+a future remote-runner feature. The dashboard currently binds to loopback only
+and is not a LAN server.
+
 ## Build and run
 
 On Debian / Raspberry Pi OS:

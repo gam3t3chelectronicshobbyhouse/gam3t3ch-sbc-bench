@@ -20,6 +20,11 @@ for repeatability checks on Pi 2 and CM5, compositor/vsync checks, and workload
 calibration. The installer is a source-build skeleton, not a tested release
 distribution. No prebuilt binaries or hardware qualification are provided.
 
+The optional Godot Reactor Lab has been validated on the Windows development
+machine only; Pi GPU/engine compatibility is pending. It is never scored. The
+dashboard is static and starts renderers only on an explicit run. See
+IDLE_AND_SHOWCASE.md for lifecycle and measured idle overhead.
+
 Standard/full/endurance modes, storage/fio, network/iperf3 server/client, manual
 power data, performance-per-watt, a results database, multicore CPU and enhanced
 3D scenes are deliberately deferred. Local JSON loading is the current results

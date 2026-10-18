@@ -1,8 +1,11 @@
-# Scoring — suite 0.1.0 / baseline-0.1
+# Scoring — suite 0.2.0 / baseline-0.1
 
 Scores are provisional development scores. Every rate is normalized as
 `1000 × measured rate / fixed reference rate`. References are synthetic units,
 not measurements of a claimed Raspberry Pi reference board.
+
+Constants match suite 0.1.0, but 0.2.0 uses a quieter reporting policy and forms
+a separate comparison group. The optional Godot showcase is never scored.
 
 | Workload | Reference rate |
 | --- | ---: |
@@ -26,7 +29,7 @@ resolution, memory size and thread count, plus matching build/driver conditions.
 The report exposes comparison groups; hardware/build conditions need human
 review. Partial, cancelled, interrupted, as-configured, compatibility and
 non-Linux runs are ineligible for baseline comparison. A missing idle check also
-withholds eligibility. No claim of final official scoring is made by 0.1.0.
+withholds eligibility. No claim of final official scoring is made by this development suite.
 
 Workload, constants or measurement changes require a new suite version. There
 are no migration rules across versions. Never merge version groups silently.

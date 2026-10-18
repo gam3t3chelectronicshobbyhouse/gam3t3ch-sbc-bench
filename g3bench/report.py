@@ -8,7 +8,7 @@ def export_report(data, destination):
     payload = json.dumps(data, allow_nan=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
     content = template.replace("__RESULT_DATA__", payload)
     content = content.replace("__TITLE__", html.escape(data["hardware"].get("board_model") or "SBC"))
-    content = content.replace("__REFRESH__", '<meta http-equiv="refresh" content="3">' if data.get("status") == "running" else "")
+    content = content.replace("__REFRESH__", "")
     target = Path(destination)
     temp = target.with_suffix(".html.tmp")
     temp.write_text(content, encoding="utf-8")

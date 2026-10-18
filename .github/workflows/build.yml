@@ -16,3 +16,9 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -v
           bash -n install.sh
+      - name: Validate optional Godot scene headlessly
+        run: |
+          curl -fL --retry 2 -o build/godot.zip https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_linux.x86_64.zip
+          unzip -q build/godot.zip -d build/godot
+          python3 -m g3bench showcase --godot "$PWD/build/godot/Godot_v4.4.1-stable_linux.x86_64" --smoke-test --as-configured --output build/showcase-smoke
+          python3 -c "import json,pathlib; r=json.loads(next(pathlib.Path('build/showcase-smoke').glob('*/result.json')).read_text()); assert r['test_status']['showcase']['status']=='smoke_validated'; assert not r['comparison_eligible']; assert all(v is None for v in r['scores'].values())"

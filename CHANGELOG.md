@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0
+
+- Add a static, on-demand benchmark dashboard with no idle renderer, telemetry or polling.
+- Add the optional Godot 4 Reactor Lab showcase with fixed scenes and separate, unscored FPS.
+- Stop renderer processes after a run; provide cancellation and explicit dashboard shutdown.
+- Defer browser/report work until after measurements and keep telemetry in memory during tests.
+- Bump suite version to separate results recorded with the new reporting policy.
+
 ## Unreleased
 
 - Detect Pi model families and mark ARMv6/Pi 1/original Zero as experimental targets.

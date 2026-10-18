@@ -5,6 +5,7 @@ import unittest
 import argparse
 from pathlib import Path
 from unittest.mock import patch
+from g3bench import VERSION, WORKLOAD
 
 from g3bench.report import export_report
 from g3bench.scoring import NORMALIZATION, geometric, scores
@@ -82,7 +83,7 @@ class ArtifactTests(unittest.TestCase):
         test_root.mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(dir=test_root) as folder:
             args = argparse.Namespace(output=folder, compat=False, fullscreen=False, as_configured=False, headless=True, open=False)
-            with patch("g3bench.__main__.binary", return_value="native"), patch("g3bench.__main__.execute", return_value={"compiler": "test", "suite_version": "0.1.0", "workload_id": "baseline-0.1"}) as tool, patch("g3bench.__main__.hardware", return_value={"board_model": "Test", "platform": "Linux"}), patch("g3bench.__main__.Sampler") as sampler, patch("g3bench.__main__.cpu_ticks", side_effect=[(100, 50), (200, 50)]), patch("g3bench.__main__.processes", return_value={}), patch("g3bench.__main__.time.sleep"):
+            with patch("g3bench.__main__.binary", return_value="native"), patch("g3bench.__main__.execute", return_value={"compiler": "test", "suite_version": VERSION, "workload_id": WORKLOAD}) as tool, patch("g3bench.__main__.hardware", return_value={"board_model": "Test", "platform": "Linux"}), patch("g3bench.__main__.Sampler") as sampler, patch("g3bench.__main__.cpu_ticks", side_effect=[(100, 50), (200, 50)]), patch("g3bench.__main__.processes", return_value={}), patch("g3bench.__main__.time.sleep"):
                 sampler.return_value.sample.return_value = {"temperature_c": None}
                 self.assertEqual(run(args), 2)
                 self.assertEqual(tool.call_count, 1)  # build info only, no CPU/memory

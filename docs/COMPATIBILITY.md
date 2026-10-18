@@ -53,5 +53,6 @@ null, not zero. An incomplete run has no overall score and is excluded from
 overall comparisons. Optional low-resolution mode remains an explicit user
 choice, labelled separately. No board automatically gets easier scored tests.
 
-The scored work and normalization remain suite 0.1.0 / baseline-0.1. This update
-adds detection, scheduling and reporting; it does not change those workloads.
+The native scored work remains baseline-0.1. Suite 0.2.0 keeps those operation
+counts and constants, with a quieter reporting policy and a separate comparison
+group. Optional Godot support is independent from the native GLES2 baseline.

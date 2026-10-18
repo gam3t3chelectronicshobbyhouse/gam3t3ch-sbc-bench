@@ -29,7 +29,7 @@ PY
 chmod +x "$bindir/g3bench"
 if [[ -d "$HOME/.local/share/applications" || -n "${XDG_CURRENT_DESKTOP:-}" ]]; then
   mkdir -p "$HOME/.local/share/applications"
-  printf '[Desktop Entry]\nType=Application\nName=GAM3T3CH SBC Bench\nExec="%s/g3bench" quick --open\nTerminal=true\nCategories=System;Utility;\n' "$bindir" > "$HOME/.local/share/applications/g3bench.desktop"
+  printf '[Desktop Entry]\nType=Application\nName=GAM3T3CH SBC Bench\nExec="%s/g3bench" ui\nTerminal=true\nCategories=System;Utility;\n' "$bindir" > "$HOME/.local/share/applications/g3bench.desktop"
 fi
-echo "Installed. Add $bindir to PATH if necessary, then run: g3bench quick --open"
+echo "Installed. Add $bindir to PATH if necessary, then run: g3bench ui"
 echo 'This is a development baseline; physical Raspberry Pi qualification is in progress.'

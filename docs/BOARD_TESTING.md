@@ -61,13 +61,16 @@ rates, frame times and thermal traces as well as scores. Note failures and
 variation before calling the suite repeatable on a board. Results include the
 hostname; review personal metadata before sharing them publicly.
 
-## Graphical showcase direction
+## Optional graphical showcase
 
-The scored graphics baseline remains native SDL2/GLES2. A future optional Godot
-scene can add a detailed 3D workshop, camera path, lighting and particles. It
-must have a separate workload identity, capability status and non-scored result;
-it cannot replace or contribute to baseline overall scores. Godot 4's
+The scored graphics baseline remains native SDL2/GLES2. Reactor Lab is a separate
+optional Godot scene with a fixed camera path, lighting, orbiting meshes and a
+particle field. Run `g3bench showcase --godot /path/to/godot4 --open` or use the
+dashboard. Its FPS is separate and cannot contribute to baseline overall scores.
+Record both the suite version and Godot version. Also measure idle dashboard
+CPU/memory on each board, verify the renderer exits, and test Stop/Escape.
+Godot 4's
 Compatibility renderer requires GLES3/OpenGL3.3, per the
 [official requirements](https://docs.godotengine.org/en/stable/about/system_requirements.html),
 so an installed Windows editor does not establish support on older Pi boards.
-Godot is not installed or required by this installer.
+Godot is not installed or required by the portable installer.

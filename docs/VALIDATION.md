@@ -1,5 +1,34 @@
 # First milestone validation — 2026-10-18
 
+## Suite 0.2.0 dashboard and optional Godot showcase
+
+- Added an on-demand loopback dashboard with a static preview and no idle
+  renderer, telemetry thread, polling or animation loop. Measurements pause the
+  dashboard; results and graphs render afterward.
+- Added Reactor Lab as an explicitly launched Godot 4 Compatibility scene with
+  three fixed stages, separate FPS/1% lows, finite lifetime and no baseline score.
+- Rebuilt native tools for suite 0.2.0. CPU/memory operation counts and constants
+  are unchanged; report activity changed, so suite comparison groups are separate.
+- All 22 Python/native/lifecycle tests passed on Windows in 6.645 seconds.
+  Loopback integration tests were run outside the development sandbox, which
+  blocks Python's internal loopback socket-pair connection. Tests include idle
+  startup, host/origin/token authorization, shutdown, cancellation, single-job
+  enforcement, missing engines, unscored results and child-process waiting.
+- Real `quick --headless` passed CPU/memory with GPU SKIPPED and null overall.
+- Godot 4.7.2 initialized the source scene in headless smoke mode, then rendered
+  full three-stage runs with the development NVIDIA GPU at 1280×720. The scene
+  and final HUD were visually inspected. Godot exited after the fixed run;
+  the existing project-manager window was left intact. Pi graphics validation
+  remains pending. The dashboard Stop path was also exercised against a live
+  renderer and records cancellation without using incomplete scores.
+- Idle dashboard process measurement over 10.039 seconds: 0.000 additional CPU
+  seconds, approximately 29.9 MiB working set. This excludes browser use and is
+  bounded by CPU-time resolution, not a claim of zero whole-system load.
+- Linux CI now also initializes the scene headlessly with pinned Godot 4.4.1;
+  that check does not claim GPU performance or physical Pi support.
+
+See IDLE_AND_SHOWCASE.md for methodology, remaining limitations and lifecycle.
+
 ## Board compatibility update — 2026-10-18
 
 Added Pi model/profile detection, per-test status/reasons, memory headroom checks,

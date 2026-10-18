@@ -66,6 +66,7 @@ def run(args):
                               "threads": 1, "memory_buffer_bytes": 33554432},
             "status": "preflight", "stage": "Idle check", "telemetry": [], "results": {}, "errors": {},
             "power": None, "scores": scores({}), "classification": "COMPATIBILITY" if args.compat else "BASELINE"}
+    data["configuration"]["report_updates"] = "stage-boundaries-and-after-run"
     result_path = folder / "result.json"
     report_path = folder / "report.html"
     stop = threading.Event()
@@ -83,7 +84,6 @@ def run(args):
         while not stop.wait(1):
             try:
                 sample()
-                publish()
             except Exception as exc:
                 data["errors"]["telemetry"] = str(exc)
     sample()
@@ -122,8 +122,6 @@ def run(args):
         for stage in ("cpu", "memory", "gpu"):
             data["stage"] = stage.upper()
             publish()
-            if args.open and stage == "cpu":
-                webbrowser.open(report_path.as_uri())
             print(f"[{time.monotonic()-start:.1f}s] {stage.upper()}", flush=True)
             tool = native if stage != "gpu" else gpu_tool
             if plan[stage]["status"] != "ready":
@@ -177,15 +175,29 @@ def run(args):
             writer = csv.writer(handle)
             writer.writerow(["version", "run_id", "classification", *data["scores"]])
             writer.writerow([VERSION, run_id, data["classification"], *data["scores"].values()])
+    if args.open:
+        webbrowser.open(report_path.as_uri())
     print(json.dumps({"status": data["status"], "test_status": plan, "scores": data["scores"], "result": str(result_path), "report": str(report_path)}, indent=2))
     return exit_status
 
 
 def main():
-    parser = argparse.ArgumentParser(description="GAM3T3CH SBC Bench — milestone 1")
+    parser = argparse.ArgumentParser(description="GAM3T3CH SBC Bench")
     parser.add_argument("--version", action="version", version=VERSION)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("detect", help="Print hardware and telemetry")
+    ui = sub.add_parser("ui", help="Launch the lightweight local dashboard")
+    ui.add_argument("--port", type=int, default=0, help="Loopback port; 0 selects a free port")
+    ui.add_argument("--no-open", action="store_true")
+    ui.add_argument("--output", default="results")
+    ui.add_argument("--godot", help="Optional Godot 4 executable; no engine is launched while idle")
+    showcase = sub.add_parser("showcase", help="Optional Godot 4 reactor scene; separate, unscored FPS")
+    showcase.add_argument("--godot", help="Godot 4 executable, or set G3BENCH_GODOT")
+    showcase.add_argument("--output", default="results")
+    showcase.add_argument("--fullscreen", action="store_true")
+    showcase.add_argument("--as-configured", action="store_true")
+    showcase.add_argument("--open", action="store_true")
+    showcase.add_argument("--smoke-test", action="store_true", help="Headless scene validation only; no performance result")
     check = sub.add_parser("check", help="Detect board and check test availability without benchmarking")
     check.add_argument("--headless", action="store_true")
     check.add_argument("--compat", action="store_true")
@@ -196,11 +208,17 @@ def main():
     quick.add_argument("--fullscreen", action="store_true")
     quick.add_argument("--as-configured", action="store_true", help="Accept background load and label the run")
     quick.add_argument("--output", default="results")
-    quick.add_argument("--open", action="store_true", help="Open the local report; refresh for stage updates")
+    quick.add_argument("--open", action="store_true", help="Open the report after measurement finishes")
     report = sub.add_parser("report", help="Regenerate a standalone HTML report")
     report.add_argument("result", type=Path)
     args = parser.parse_args()
     try:
+        if args.command == "ui":
+            from .ui import serve
+            return serve(args)
+        if args.command == "showcase":
+            from .showcase import run_showcase
+            return run_showcase(args)
         if args.command == "detect":
             print(json.dumps({"hardware": hardware(), "telemetry": Sampler().sample()}, indent=2))
             return 0

@@ -1,9 +1,15 @@
-# Benchmark methodology — suite 0.1.0
+# Benchmark methodology — suite 0.2.0
 
 All systems run the same work with one CPU thread. Native code is compiled at
 `-O2` (MSVC `/O2` on development Windows), without fast-math or CPU-specific
 flags. Compiler version and pointer width are saved. Compiler, ABI and OS still
 affect results; compare like builds and preserve metadata.
+
+In 0.2.0 telemetry is buffered during workloads. The browser/dashboard is not
+refreshed during timed calls, and results open afterward. This changes reporting
+activity from 0.1.0, so suite versions remain separate comparison groups. Native
+workload counts and normalization are unchanged. Optional Godot showcase
+methodology is documented in IDLE_AND_SHOWCASE.md and does not alter the baseline.
 
 CPU consists of 384,000,000 xorshift32 iterations, 256,000,000 dependent floating
 point updates, FNV-1a over a deterministic 64 KiB buffer 16,384 times, 8,192 RLE

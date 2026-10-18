@@ -67,6 +67,7 @@ def run(args):
             "status": "preflight", "stage": "Idle check", "telemetry": [], "results": {}, "errors": {},
             "power": None, "scores": scores({}), "classification": "COMPATIBILITY" if args.compat else "BASELINE"}
     data["configuration"]["report_updates"] = "stage-boundaries-and-after-run"
+    data["configuration"].update(label=getattr(args, "label", "Stock baseline"), notes=getattr(args, "notes", ""))
     result_path = folder / "result.json"
     report_path = folder / "report.html"
     stop = threading.Event()
@@ -186,6 +187,18 @@ def main():
     parser.add_argument("--version", action="version", version=VERSION)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("detect", help="Print hardware and telemetry")
+    sub.add_parser("drives", help="List connected Linux drives and writable filesystem candidates; no I/O test")
+    storage = sub.add_parser("storage", help="Per-drive temporary-file read/write tests; requires fio on Linux")
+    storage.add_argument("--all", action="store_true", help="One eligible filesystem per physical drive")
+    storage.add_argument("--target", action="append", help="Existing test directory; repeat for multiple filesystems")
+    storage.add_argument("--allow-writes", action="store_true", help="Acknowledge temporary-file writes on selected drives")
+    storage.add_argument("--size-mib", type=int, default=1024, help="Fixed file and I/O bytes per stage in MiB (default 1024)")
+    storage.add_argument("--timeout", type=int, default=600, help="Per-stage timeout in seconds; incomplete stages fail")
+    storage.add_argument("--output", default="results")
+    storage.add_argument("--as-configured", action="store_true")
+    storage.add_argument("--label", default="Stock baseline")
+    storage.add_argument("--notes", default="")
+    storage.add_argument("--open", action="store_true")
     ui = sub.add_parser("ui", help="Launch the lightweight local dashboard")
     ui.add_argument("--port", type=int, default=0, help="Loopback port; 0 selects a free port")
     ui.add_argument("--no-open", action="store_true")
@@ -198,6 +211,8 @@ def main():
     showcase.add_argument("--as-configured", action="store_true")
     showcase.add_argument("--open", action="store_true")
     showcase.add_argument("--smoke-test", action="store_true", help="Headless scene validation only; no performance result")
+    showcase.add_argument("--label", default="Stock baseline")
+    showcase.add_argument("--notes", default="")
     check = sub.add_parser("check", help="Detect board and check test availability without benchmarking")
     check.add_argument("--headless", action="store_true")
     check.add_argument("--compat", action="store_true")
@@ -209,10 +224,19 @@ def main():
     quick.add_argument("--as-configured", action="store_true", help="Accept background load and label the run")
     quick.add_argument("--output", default="results")
     quick.add_argument("--open", action="store_true", help="Open the report after measurement finishes")
+    quick.add_argument("--label", default="Stock baseline")
+    quick.add_argument("--notes", default="")
     report = sub.add_parser("report", help="Regenerate a standalone HTML report")
     report.add_argument("result", type=Path)
     args = parser.parse_args()
     try:
+        if args.command == "drives":
+            from .storage import discover
+            print(json.dumps({"drives": discover()}, indent=2))
+            return 0
+        if args.command == "storage":
+            from .storage import run_storage
+            return run_storage(args)
         if args.command == "ui":
             from .ui import serve
             return serve(args)

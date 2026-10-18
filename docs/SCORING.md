@@ -1,4 +1,4 @@
-# Scoring — suite 0.2.0 / baseline-0.1
+# Scoring — suite 0.3.0 / baseline-0.1
 
 Scores are provisional development scores. Every rate is normalized as
 `1000 × measured rate / fixed reference rate`. References are synthetic units,
@@ -33,3 +33,8 @@ withholds eligibility. No claim of final official scoring is made by this develo
 
 Workload, constants or measurement changes require a new suite version. There
 are no migration rules across versions. Never merge version groups silently.
+
+Suite 0.3.0 adds separate per-drive file tests and tuning telemetry. See
+[storage and tuning](STORAGE_AND_TUNING.md). Storage is unscored and is not
+part of baseline overall. Native workload counts remain unchanged; compare
+matching suite versions because telemetry reads changed.

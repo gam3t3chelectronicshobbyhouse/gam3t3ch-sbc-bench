@@ -13,6 +13,9 @@ if [[ -e "$prefix" ]]; then echo "Destination exists: $prefix. Update/build it m
 case "$prefix" in /*) ;; *) echo 'G3BENCH_PREFIX must be an absolute path.' >&2; exit 1 ;; esac
 sudo apt-get update
 sudo apt-get install -y build-essential cmake pkg-config git python3
+if ! sudo apt-get install -y fio util-linux; then
+  echo 'Optional storage tools unavailable; CPU/memory/graphics remain usable.' >&2
+fi
 if ! sudo apt-get install -y libsdl2-dev libgles2-mesa-dev; then
   echo 'Optional graphics dependencies unavailable; building headless baseline.' >&2
 fi

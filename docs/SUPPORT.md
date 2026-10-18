@@ -25,11 +25,14 @@ machine only; Pi GPU/engine compatibility is pending. It is never scored. The
 dashboard is static and starts renderers only on an explicit run. See
 IDLE_AND_SHOWCASE.md for lifecycle and measured idle overhead.
 
-Standard/full/endurance modes, storage/fio, network/iperf3 server/client, manual
+Storage/fio is available as a separate Linux file-test mode; see
+STORAGE_AND_TUNING.md. Physical Pi storage validation is pending.
+
+Standard/full/endurance modes, network/iperf3 server/client, manual
 power data, performance-per-watt, a results database, multicore CPU and enhanced
 3D scenes are deliberately deferred. Local JSON loading is the current results
 comparison mechanism. The report uses a current browser (including Array.at).
 
 The next milestone should qualify ARMv7 and ARM64 boards, add repeated-run
-statistics and thermal/frequency analysis, then introduce opt-in fio storage
-with explicit write warnings and a versioned full-suite aggregate.
+statistics and qualify the opt-in fio storage tests, followed by a separately
+versioned full-suite aggregate.

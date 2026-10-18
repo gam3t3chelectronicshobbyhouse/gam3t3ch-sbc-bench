@@ -45,9 +45,22 @@ class Dashboard:
         with self.lock:
             return {"phase": self.phase, "message": self.message, "report_available": self.report_path is not None}
 
-    def start(self, kind, headless=False, fullscreen=False, as_configured=False):
-        if not isinstance(kind, str) or kind not in {"quick", "showcase"}:
+    def start(self, kind, headless=False, fullscreen=False, as_configured=False, options=None):
+        if not isinstance(kind, str) or kind not in {"quick", "showcase", "storage"}:
             raise ValueError("Unknown benchmark mode")
+        options = options or {}
+        for key, limit in (("label", 120), ("notes", 1000)):
+            if not isinstance(options.get(key, ""), str) or len(options.get(key, "")) > limit:
+                raise ValueError("Invalid run label or notes")
+        if kind == "storage":
+            targets = options.get("targets")
+            size = options.get("size_mib", 1024)
+            if not isinstance(targets, list) or not 1 <= len(targets) <= 32 or any(not isinstance(t, str) or len(t) > 1024 for t in targets):
+                raise ValueError("Select at least one mounted drive")
+            if type(size) is not int or not 16 <= size <= 16384:
+                raise ValueError("File size must be 16–16384 MiB")
+            if options.get("allow_writes") is not True:
+                raise ValueError("Acknowledge temporary-file writes before starting storage tests")
         with self.lock:
             if self.phase == "running":
                 raise ValueError("A benchmark is already running")
@@ -59,18 +72,22 @@ class Dashboard:
             self.cancel_requested = False
             self.done = threading.Event()
             folder = self.output / ("dashboard-" + time.strftime("%Y%m%dT%H%M%S") + "-" + secrets.token_hex(3))
-            self.worker = threading.Thread(target=self._run, args=(folder, kind, headless, fullscreen, as_configured), daemon=True)
+            self.worker = threading.Thread(target=self._run, args=(folder, kind, headless, fullscreen, as_configured, options), daemon=True)
             self.worker.start()
 
-    def _run(self, folder, kind, headless, fullscreen, as_configured):
+    def _run(self, folder, kind, headless, fullscreen, as_configured, options):
         try:
             folder.mkdir(parents=True)
             command = [sys.executable, "-m", "g3bench", kind, "--output", str(folder)]
+            command += ["--label=" + options.get("label", "Stock baseline"), "--notes=" + options.get("notes", "")]
             if kind == "showcase":
                 command += ["--godot", self.engine]
+            elif kind == "storage":
+                command += ["--allow-writes", "--size-mib=" + str(options.get("size_mib", 1024))]
+                command += ["--target=" + target for target in options["targets"]]
             elif headless:
                 command += ["--headless"]
-            if fullscreen:
+            if fullscreen and kind != "storage":
                 command += ["--fullscreen"]
             if as_configured:
                 command += ["--as-configured"]
@@ -87,7 +104,7 @@ class Dashboard:
                 cancelled = folder / "cancelled"
                 cancelled.mkdir()
                 result = {"schema_version": 2, "benchmark_version": VERSION,
-                          "workload_id": SHOWCASE_ID if kind == "showcase" else "baseline-0.1",
+                          "workload_id": SHOWCASE_ID if kind == "showcase" else "storage-file-0.1" if kind == "storage" else "baseline-0.1",
                           "hardware": self.hardware, "configuration": {"mode": kind},
                           "classification": "SHOWCASE" if kind == "showcase" else "INTERRUPTED",
                           "status": "cancelled", "stage": "Cancelled by user", "telemetry": [],
@@ -179,6 +196,14 @@ def serve(args, ready=None):
                     return self.reply(payload.encode("utf-8"), content_type="text/event-stream")
                 except (BrokenPipeError, ConnectionResetError):
                     return
+            if route.path == "/drives":
+                if dashboard.snapshot()["phase"] == "running":
+                    return self.reply({"error": "Wait for the active run before rediscovering drives"}, 409)
+                from .storage import discover
+                try:
+                    return self.reply({"drives": discover(), "reason": "Drive tests require Linux / Raspberry Pi OS." if os.name == "nt" else None})
+                except (OSError, ValueError) as exc:
+                    return self.reply({"error": str(exc)}, 400)
             if route.path in {"/report", "/result.json"}:
                 with dashboard.lock:
                     path = dashboard.report_path if route.path == "/report" else dashboard.result_path
@@ -194,7 +219,7 @@ def serve(args, ready=None):
                 return self.reply({"error": "Local dashboard authorization required"}, 403)
             try:
                 length = int(self.headers.get("Content-Length", "0"))
-                if not 0 <= length <= 2048:
+                if not 0 <= length <= 16384:
                     raise ValueError("Invalid request size")
                 data = json.loads(self.rfile.read(length) or b"{}")
                 if not isinstance(data, dict):
@@ -203,7 +228,10 @@ def serve(args, ready=None):
                     for key in ("headless", "fullscreen", "as_configured"):
                         if key in data and not isinstance(data[key], bool):
                             raise ValueError("Options must be boolean")
-                    dashboard.start(data.get("kind"), data.get("headless", False), data.get("fullscreen", False), data.get("as_configured", False))
+                    options = data.get("options", {})
+                    if not isinstance(options, dict):
+                        raise ValueError("Expected run options")
+                    dashboard.start(data.get("kind"), data.get("headless", False), data.get("fullscreen", False), data.get("as_configured", False), options)
                 elif self.path == "/cancel":
                     dashboard.cancel()
                 elif self.path == "/shutdown":

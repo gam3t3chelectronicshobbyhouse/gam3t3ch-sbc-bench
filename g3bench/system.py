@@ -76,7 +76,24 @@ def hardware():
         "storage_mount": mounts, "storage_type": None,
         "gpu_renderer": None, "graphics_driver": None,
         "platform": platform.system(),
+        "tuning": tuning_snapshot(),
     }
+
+
+def tuning_snapshot():
+    """Read configuration only; never change clocks, swap or kernel controls."""
+    policies = []
+    for path in sorted(glob.glob("/sys/devices/system/cpu/cpufreq/policy*")):
+        policies.append({"policy": Path(path).name, **{name: read(path + "/" + name) for name in
+                        ("scaling_governor", "scaling_driver", "scaling_min_freq", "scaling_max_freq", "cpuinfo_max_freq")}})
+    zram = []
+    for path in sorted(glob.glob("/sys/block/zram*")):
+        zram.append({"device": Path(path).name, **{name: read(path + "/" + name) for name in
+                     ("disksize", "comp_algorithm", "mm_stat", "io_stat", "backing_dev")}})
+    return {"cpu_policies": policies, "swaps": read("/proc/swaps"), "zram": zram,
+            "swappiness": read("/proc/sys/vm/swappiness"),
+            "zswap_enabled": read("/sys/module/zswap/parameters/enabled"),
+            "overclock_status": "Not inferred; record stock or modified settings in run notes"}
 
 
 def cpu_ticks():
@@ -155,4 +172,7 @@ class Sampler:
                 "sensors": temperatures, "cpu_mhz": max(frequencies, default=None),
                 "cpu_utilization": utilization,
                 "memory_used_bytes": mem.get("MemTotal", 0) - mem.get("MemAvailable", 0) if "MemAvailable" in mem else None,
-                "throttled_bits": throttle, "cooling": cooling}
+                "throttled_bits": throttle, "cooling": cooling,
+                "swap_used_bytes": mem.get("SwapTotal", 0) - mem.get("SwapFree", 0) if "SwapTotal" in mem and "SwapFree" in mem else None,
+                "memory_pressure": read("/proc/pressure/memory"),
+                "zram": {Path(path).parent.name: read(path) for path in sorted(glob.glob("/sys/block/zram*/mm_stat"))}}

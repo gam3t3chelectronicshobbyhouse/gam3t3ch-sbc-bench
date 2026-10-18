@@ -1,5 +1,24 @@
 # First milestone validation — 2026-10-18
 
+## Suite 0.3.0 storage and tuning
+
+Added Linux physical-backed filesystem discovery, explicit file-write selection,
+four separate fio workloads per drive, drive-level failures/cleanup and unscored
+JSON/CSV/report output. Added run labels/notes, governor/swap/zram snapshots,
+active swap/zram/memory-pressure samples and offline comparison bars/charts.
+Native CPU/memory rebuilt for 0.3.0; operation counts remain unchanged.
+
+Local Windows regression run: 32 tests, 31 passed, one Linux real-fio test
+skipped (6.783 seconds). Includes discovery with SD/eMMC/USB/NVMe, read-only and
+unmounted drives, bind-mount deduplication, file isolation, free-space headroom,
+timeout cleanup, write acknowledgement, missing fio, removed-drive isolation
+and tuning snapshots. Loopback tests run outside the development sandbox.
+The Windows storage CLI saved an explicit UNSUPPORTED report without drive I/O.
+Installer shell syntax and Python compilation passed. The Linux CI job installs
+fio and runs a real 16 MiB direct-I/O test of all four workloads with cleanup.
+Actual Pi/removable-drive validation and repeated-run characterization remain
+pending. Synthetic report fixtures are kept only under ignored build/.
+
 ## Suite 0.2.1 branding
 
 Unified the dashboard, reports, desktop entry and optional scene under

@@ -6,7 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install graphics build dependencies
-        run: sudo apt-get update && sudo apt-get install -y libsdl2-dev libgles2-mesa-dev
+        run: sudo apt-get update && sudo apt-get install -y libsdl2-dev libgles2-mesa-dev fio
       - name: Build native tools including GLES 2
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release

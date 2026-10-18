@@ -6,12 +6,13 @@ The repository remains `gam3t3ch-sbc-bench` and the command remains `g3bench`.
 A repeatable Linux single-board computer benchmark, designed for Raspberry Pi 2,
 3, 4, 5 and Compute Module 5, with future ARM Linux boards in mind.
 
-**0.2.1 is a development suite. No Pi board is hardware-validated yet.**
+**0.3.0 is a development suite. No Pi board is hardware-validated yet.**
 It contains hardware detection, temperature/cooling telemetry, native CPU and
 memory workloads, an optional SDL2/OpenGL ES 2 benchmark, JSON/CSV output and a
 standalone dark results screen, an on-demand dashboard and an optional Godot 4
 reactor showcase. The CLI works without the graphical interface.
-Storage, network, endurance and manual power entry are later milestones.
+Per-drive storage tests use optional fio on Linux. Network, endurance, controlled
+memory-pressure testing and manual power entry remain later milestones.
 
 ## Build and run
 
@@ -75,8 +76,8 @@ stops the run and prints the busiest observed processes. No services are stopped
 `--as-configured` accepts this condition and labels the run. Unsupported sensors
 are recorded as null, including on a Windows development machine.
 
-Each run gets its own directory under `results/` containing `result.json`,
-`report.html` and `summary.csv`. Open the report in a browser after testing;
+Each run gets its own directory under `results/` containing `result.json` and
+`report.html`. Baseline runs add `summary.csv`; storage runs add `storage.csv`. Open the report in a browser after testing;
 `--open` opens it only when the run finishes. Telemetry remains active during
 tests, but HTML is not rewritten every second and reports never auto-refresh.
 Completed reports show telemetry graphs offline and accept saved JSON files for
@@ -89,6 +90,30 @@ Pi 1 / original Zero / ARMv6 support is experimental. Tests are scheduled by
 actual capabilities, with PASSED, FAILED, UNSUPPORTED, UNAVAILABLE or SKIPPED
 statuses and reasons. Slow results do not fail merely for being slow. See
 [board compatibility](docs/COMPATIBILITY.md).
+
+## Connected drives and tuning experiments
+
+```sh
+g3bench drives
+g3bench storage --all --allow-writes --label 'Stock baseline' --open
+g3bench storage --target /media/user/ssd/bench --allow-writes --open
+```
+
+The dashboard has drive selection and an explicit temporary-write acknowledgement.
+Automatic selection tests one writable filesystem per physical drive, excluding
+boot/EFI partitions. Unmounted/read-only drives are listed with reasons. Each
+drive gets sequential read/write and 4 KiB random read/write tests using a private
+temporary file (default 1 GiB), direct I/O, one job and queue depth one. File size
+and timeout are configurable. Tests never format drives or write raw devices.
+Storage stays unscored and separate from compute scores.
+
+Post-run reports show MB/s, IOPS, mean/p99 latency, drive comparison bars and
+configuration deltas when settings match. Temperature/load charts include axes
+and stage tooltips, plus swap/zram use and memory pressure where exposed.
+Run labels/notes and automatic governor/swap/zram snapshots support later tuning
+experiments. The suite never changes clocks or memory configuration. Zram
+benefits need memory-pressure workloads that are not implemented yet.
+See [storage methodology and tuning](docs/STORAGE_AND_TUNING.md).
 
 ## One-line installer
 

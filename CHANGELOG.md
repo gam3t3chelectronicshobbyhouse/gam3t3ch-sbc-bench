@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0
+
+- Add connected-drive discovery and separate file-only fio tests: sequential and
+  4 KiB random reads/writes, MB/s, IOPS, mean/p99 latency, raw fio JSON and CSV.
+- Add dashboard drive selection, write acknowledgement, file size, run labels
+  and notes. Automatic selection uses one eligible filesystem per physical drive.
+- Add CPU policy, swap, zram and zswap snapshots; active swap/zram/memory-pressure
+  telemetry. Offline charts have axes and stage tooltips, with per-drive bars and
+  matching-configuration deltas across saved runs.
+- Add optional fio installation and Linux direct-I/O integration checks. Storage
+  remains unscored. Native workload counts stay unchanged; the extra telemetry
+  makes this a separate suite-version comparison group.
+
 ## 0.2.1
 
 - Unify the dashboard, reports, desktop entry and scene under GAM3T3CH 3D Benchmark branding.

@@ -70,6 +70,7 @@ def run_showcase(args):
             "status": "partial", "stage": "Showcase preflight", "test_status": {}, "telemetry": [],
             "results": {}, "scores": scores({}), "errors": {}, "power": None, "comparison_eligible": False}
     stop = threading.Event()
+    data["configuration"].update(label=getattr(args, "label", "Stock baseline"), notes=getattr(args, "notes", ""))
     logger = None
     started = time.monotonic()
     sampler = Sampler()

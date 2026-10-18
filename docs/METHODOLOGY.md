@@ -1,4 +1,4 @@
-# Benchmark methodology — suite 0.2.0
+# Benchmark methodology — suite 0.3.0
 
 All systems run the same work with one CPU thread. Native code is compiled at
 `-O2` (MSVC `/O2` on development Windows), without fast-math or CPU-specific
@@ -59,6 +59,11 @@ predate the run. All raw samples remain in JSON. Frequency-drop sample counts
 are observations, not proof of thermal throttling. No tachometer means no RPM.
 
 Root storage mount/source is discovered with findmnt. Storage type is left
-unknown rather than guessed from speed. Storage and network are not exercised
-in this milestone. No storage write test runs. Power is null until manual input
+unknown rather than guessed from speed. Network is not exercised. Storage is exercised only in the separate, explicitly
+selected storage mode; quick runs perform no storage write test. Power is null until manual input
 is implemented. CLI output, HTML and JSON expose missing measurements explicitly.
+
+Suite 0.3.0 adds separate per-drive file tests and tuning telemetry. See
+[storage and tuning](STORAGE_AND_TUNING.md). Storage is unscored and is not
+part of baseline overall. Native workload counts remain unchanged; compare
+matching suite versions because telemetry reads changed.

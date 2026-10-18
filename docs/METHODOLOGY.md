@@ -82,3 +82,13 @@ start a second sampler. Component idle checks remain in place. This combined
 session is a distinct comparison mode and is not baseline-comparison eligible;
 match full sessions and their component configurations when comparing changes.
 Storage and Godot remain unscored. Interrupted runs preserve completed work.
+
+Suite 0.5.0 adds explicit matching GLES shader precision without changing CPU/RAM
+operation counts. storage-file-0.2 keeps fixed sequential bytes but uses 20-second
+random stages. full-checkup-0.2 adds sustained SHA256 load (default 60 seconds,
+auto up to eight workers) and opt-in HTTP or iperf3 network trials. These rates
+are separate and unscored. Common CPU/RAM normalization stays fixed; legacy
+360p GPU work is a different group, never an adjusted official GPU score.
+Reports can compare compatible raw metrics even when overall is unavailable;
+repeat summaries show median/range/N, not statistical significance. Disk/interface
+activity is whole-system counter deltas during the run. See DIAGNOSTICS_AND_TUNING.md.

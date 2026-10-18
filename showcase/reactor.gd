@@ -292,7 +292,7 @@ func finish(status: String, reason: String) -> void:
 		status = "unavailable"
 		reason = "Fullscreen presentation was requested but the window manager did not retain it. Retry --windowed for a labelled windowed run."
 	var size_value := get_viewport().get_visible_rect().size
-	var result := {"workload_id": WORKLOAD_ID, "status": status, "reason": reason, "scored": false, "smoke_test": smoke_test, "engine_version": Engine.get_version_info().string, "renderer": RenderingServer.get_video_adapter_name(), "rendering_method": RenderingServer.get_current_rendering_method(), "width": size_value.x, "height": size_value.y, "msaa_3d": get_viewport().msaa_3d, "warmup_seconds_per_scene": 2, "scene_seconds": SCENE_SECONDS, "scenes": results}
+	var result := {"workload_id": WORKLOAD_ID, "status": status, "reason": reason, "scored": false, "smoke_test": smoke_test, "engine_version": Engine.get_version_info().string, "renderer": RenderingServer.get_video_adapter_name(), "rendering_method": RenderingServer.get_current_rendering_method(), "rendering_driver": RenderingServer.get_current_rendering_driver_name(), "api_version": RenderingServer.get_video_adapter_api_version(), "display_server": DisplayServer.get_name(), "width": size_value.x, "height": size_value.y, "msaa_3d": get_viewport().msaa_3d, "warmup_seconds_per_scene": 2, "scene_seconds": SCENE_SECONDS, "scenes": results}
 	var file := FileAccess.open(output_path, FileAccess.WRITE)
 	result["window_width"] = get_window().size.x
 	result["window_height"] = get_window().size.y

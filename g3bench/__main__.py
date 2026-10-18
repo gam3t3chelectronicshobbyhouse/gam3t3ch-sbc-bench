@@ -45,7 +45,15 @@ def run(args):
     native = binary("g3bench-native")
     gpu_tool = binary("g3bench-gpu")
     hw = hardware()
-    native_info, plan = prepare(hw, native, gpu_tool, execute, headless=args.headless, compat=args.compat, fullscreen=args.fullscreen)
+    from .diagnostics import test_profile, collect
+    selected_profile = test_profile(hw, getattr(args, 'profile', 'auto'))
+    args.compat = args.compat or selected_profile['name'] == 'legacy'
+    only = {'graphics':'gpu','cpu':'cpu','memory':'memory'}.get(getattr(args,'command',''), 'all')
+    diagnostics = args._session.data.get('diagnostics',{}) if getattr(args,'_session',None) else collect(probes=only not in {'cpu','memory'})
+    native_info, plan = prepare(hw, native, gpu_tool, execute, headless=args.headless or only in {"cpu","memory"}, compat=args.compat, fullscreen=args.fullscreen)
+    if only != 'all':
+        for key in plan:
+            if key != only:plan[key] = state('skipped','Not selected for this subsystem run.')
     print("Board: " + hw["board_model"])
     for name, test in plan.items():
         print(f"{name.upper()}: {test['status'].upper()} — {test['reason']}")
@@ -60,7 +68,8 @@ def run(args):
             "timestamp": stamp.isoformat(), "run_id": run_id, "hardware": hw,
             "native_build": native_info,
             "test_status": plan,
-            "configuration": {"mode": "quick", "compatibility": args.compat, "fullscreen": args.fullscreen,
+            "diagnostics": diagnostics,
+            "configuration": {"mode": "quick" if only == "all" else only, "test_profile": selected_profile, "compatibility": args.compat, "fullscreen": args.fullscreen,
                               "resolution": [640, 360] if args.compat else [1280, 720],
                               "telemetry_interval_seconds": 1, "idle_seconds": 3, "idle_threshold_percent": 10,
                               "threads": 1, "memory_buffer_bytes": 33554432},
@@ -128,6 +137,7 @@ def run(args):
     exit_status = 0
     try:
         for stage in ("cpu", "memory", "gpu"):
+            if plan[stage]["status"] == "skipped":continue
             data["stage"] = stage.upper()
             publish()
             print(f"[{time.monotonic()-start:.1f}s] {stage.upper()}", flush=True)
@@ -152,7 +162,7 @@ def run(args):
                 data["errors"][stage] = str(exc)
                 plan[stage] = state("failed", str(exc))
                 exit_status = 1
-        data["status"] = "complete" if not data["errors"] and all(test["status"] == "passed" for test in plan.values()) else "partial"
+        data["status"] = "complete" if not data["errors"] and all(test["status"] in {"passed","skipped"} for test in plan.values()) and any(test["status"] == "passed" for test in plan.values()) else "partial"
     except KeyboardInterrupt:
         data["status"] = "interrupted"
         for name, test in list(plan.items()):
@@ -177,7 +187,7 @@ def run(args):
                                    "throttling_observed": any(v & 4 for v in bits) if bits else None,
                                    "historical_throttle_flag": any(v & (1 << 18) for v in bits) if bits else None,
                                    "frequency_reduction_samples": sum(b["cpu_mhz"] < a["cpu_mhz"] for a, b in zip(data["telemetry"], data["telemetry"][1:]) if a["cpu_mhz"] is not None and b["cpu_mhz"] is not None)}
-        data["comparison_eligible"] = (not session and data["status"] == "complete" and data["classification"] == "BASELINE" and utilization is not None)
+        data["comparison_eligible"] = (only == "all" and not session and data["status"] == "complete" and data["classification"] == "BASELINE" and utilization is not None)
         atomic_json(result_path, data)
         export_report(data, report_path)
         with (folder / "summary.csv").open("w", newline="", encoding="utf-8") as handle:
@@ -196,11 +206,32 @@ def main():
     parser.add_argument("--version", action="version", version=VERSION)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("detect", help="Print hardware and telemetry")
+    load = sub.add_parser("load", help="Sustained parallel CPU throughput and thermal profile")
+    load.add_argument("--load-seconds",type=int,default=60)
+    load.add_argument("--workers",type=int)
+    load.add_argument("--output",default=output_default)
+    load.add_argument("--label",default="Stock baseline")
+    load.add_argument("--notes",default="")
+    load.add_argument("--open",action="store_true")
+    sub.add_parser("diagnostics", help="Read graphics session/API checks and stock-tuning recommendations")
+    network = sub.add_parser("network", help="Opt-in HTTPS send/receive and response-latency measurement")
+    network.add_argument("--iperf-port",type=int,default=5201)
+    network.add_argument("--iperf-host", help="LAN peer running iperf3 -s; avoids Internet endpoint")
+    network.add_argument("--allow-network", action="store_true")
+    network.add_argument("--output", default=output_default)
+    network.add_argument("--label", default="Stock baseline")
+    network.add_argument("--notes", default="")
+    network.add_argument("--open", action="store_true")
     sub.add_parser("drives", help="List connected Linux drives and writable filesystem candidates; no I/O test")
     sub.add_parser("shortcuts", help="Create desktop/menu and uninstall shortcuts for an installed application")
     uninstall = sub.add_parser("uninstall", help="Remove this user installation while retaining saved results")
     uninstall.add_argument("--yes", action="store_true", help="Skip the interactive confirmation")
     full = sub.add_parser("full", help="Run all implemented tests sequentially with continuous telemetry")
+    full.add_argument("--profile", choices=["auto","standard","legacy"], default="auto")
+    full.add_argument("--iperf-host")
+    full.add_argument("--iperf-port",type=int,default=5201)
+    full.add_argument("--load-seconds",type=int,default=60,help="Sustained CPU phase; 0 explicitly skips")
+    full.add_argument("--allow-network", action="store_true", help="Include acknowledged ~18 MiB Cloudflare send/receive test")
     full.add_argument("--allow-writes", action="store_true")
     full.add_argument("--skip-storage", action="store_true", help="Explicitly omit temporary-file drive tests")
     full.add_argument("--target", action="append", help="Specific storage directories; default one eligible filesystem per drive")
@@ -212,6 +243,7 @@ def main():
     full.add_argument("--windowed", dest="fullscreen", action="store_false")
     full.add_argument("--as-configured", action="store_true")
     full.add_argument("--godot")
+    full.add_argument("--renderer", choices=["compatibility","vulkan"], default="compatibility")
     full.add_argument("--label", default="Stock baseline")
     full.add_argument("--notes", default="")
     full.add_argument("--output", default=output_default)
@@ -233,6 +265,7 @@ def main():
     ui.add_argument("--output", default=output_default)
     ui.add_argument("--godot", help="Optional Godot 4 executable; no engine is launched while idle")
     showcase = sub.add_parser("showcase", help="Optional Godot 4 reactor scene; separate, unscored FPS")
+    showcase.add_argument("--renderer", choices=["compatibility","vulkan"], default="compatibility")
     showcase.add_argument("--godot", help="Godot 4 executable, or set G3BENCH_GODOT")
     showcase.add_argument("--output", default=output_default)
     showcase.add_argument("--fullscreen", dest="fullscreen", action="store_true", default=True, help="Fullscreen presentation (default)")
@@ -247,7 +280,8 @@ def main():
     check.add_argument("--compat", action="store_true")
     check.add_argument("--fullscreen", dest="fullscreen", action="store_true", default=True)
     check.add_argument("--windowed", dest="fullscreen", action="store_false")
-    quick = sub.add_parser("quick", help="Fixed CPU, memory and optional GPU run")
+    quick = sub.add_parser("quick", aliases=["graphics", "cpu", "memory"], help="Fixed CPU, memory and optional GPU run")
+    quick.add_argument("--profile", choices=["auto","standard","legacy"], default="auto")
     quick.add_argument("--headless", action="store_true")
     quick.add_argument("--compat", action="store_true", help="640x360 GPU; excluded from official GPU scoring")
     quick.add_argument("--fullscreen", dest="fullscreen", action="store_true", default=True, help="Fullscreen graphics (default)")
@@ -261,6 +295,18 @@ def main():
     report.add_argument("result", type=Path)
     args = parser.parse_args()
     try:
+        if args.command == "diagnostics":
+            from .diagnostics import collect, advice, test_profile
+            result = {"hardware":hardware(),"diagnostics":collect(),"configuration":{},"telemetry":[]}
+            result["recommended_profile"] = test_profile(result["hardware"])
+            result["recommendations"] = advice(result)
+            print(json.dumps(result,indent=2)); return 0
+        if args.command == "load":
+            from .load import run_load
+            return run_load(args)
+        if args.command == "network":
+            from .network import run_network
+            return run_network(args)
         if args.command == "shortcuts":
             from .integration import run_shortcuts
             return run_shortcuts(args)

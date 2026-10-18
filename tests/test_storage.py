@@ -110,7 +110,7 @@ class FileWorkloadTests(unittest.TestCase):
             self.assertEqual(result["status"], "passed", result)
             for name, _, _ in JOBS:
                 test = result["tests"][name]
-                self.assertEqual(test["bytes"], 16*MIB)
+                self.assertEqual(test["bytes"], 16*MIB) if not name.startswith("random") else self.assertGreaterEqual(test["seconds"], 19)
                 self.assertGreater(test["mb_s"], 0)
                 self.assertGreater(test["iops"], 0)
                 self.assertGreaterEqual(test["latency_mean_ms"], 0)

@@ -6,12 +6,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install graphics build dependencies
-        run: sudo apt-get update && sudo apt-get install -y libsdl2-dev libgles2-mesa-dev fio
+        run: sudo apt-get update && sudo apt-get install -y libsdl2-dev libgles2-mesa-dev fio xvfb xauth mesa-utils iperf3
       - name: Build native tools including GLES 2
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build --parallel 2
           test -x build/g3bench-gpu
+      - name: Validate real GLES shader compilation and linking under Mesa
+        run: |
+          xvfb-run -a env SDL_VIDEODRIVER=x11 LIBGL_ALWAYS_SOFTWARE=1 build/g3bench-gpu --probe --windowed > build/gpu-probe.json
+          python3 -c "import json; r=json.load(open('build/gpu-probe.json')); assert r['status']=='ready',r"
       - name: Tests and installer syntax
         env:
           G3BENCH_RUN_SOCKET_TESTS: '1'

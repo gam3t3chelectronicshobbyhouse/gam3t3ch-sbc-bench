@@ -48,7 +48,7 @@ class Dashboard:
             return {"phase": self.phase, "message": self.message, "report_available": self.report_path is not None}
 
     def start(self, kind, headless=False, fullscreen=True, as_configured=False, options=None):
-        if not isinstance(kind, str) or kind not in {"quick", "showcase", "storage", "full"}:
+        if not isinstance(kind, str) or kind not in {"quick", "showcase", "storage", "full", "graphics", "cpu", "memory", "network", "load"}:
             raise ValueError("Unknown benchmark mode")
         options = options or {}
         for key, limit in (("label", 120), ("notes", 1000)):
@@ -63,6 +63,11 @@ class Dashboard:
                 raise ValueError("File size must be 16–16384 MiB")
             if options.get("allow_writes") is not True:
                 raise ValueError("Acknowledge temporary-file writes before starting storage tests")
+        if type(options.get('load_seconds',60)) is not int or not 1<=options.get('load_seconds',60)<=600:raise ValueError('Load duration must be 1–600 seconds')
+        if options.get('iperf_host') and (not isinstance(options['iperf_host'],str) or len(options['iperf_host'])>253):raise ValueError('Invalid iperf host')
+        if options.get('profile','auto') not in {'auto','standard','legacy'}:raise ValueError('Invalid test profile')
+        if options.get('renderer','compatibility') not in {'compatibility','vulkan'}:raise ValueError('Invalid renderer')
+        if kind == 'network' and options.get('allow_network') is not True:raise ValueError('Acknowledge external network traffic first')
         with self.lock:
             if self.phase == "running":
                 raise ValueError("A benchmark is already running")
@@ -82,6 +87,11 @@ class Dashboard:
             folder.mkdir(parents=True)
             command = ([sys.executable] if getattr(sys, "frozen", False) else [sys.executable, "-m", "g3bench"]) + [kind, "--output", str(folder)]
             command += ["--label=" + options.get("label", "Stock baseline"), "--notes=" + options.get("notes", "")]
+            if kind in {'quick','graphics','cpu','memory','full'}:command += ['--profile',options.get('profile','auto')]
+            if kind in {'showcase','full'}:command += ['--renderer',options.get('renderer','compatibility')]
+            if kind in {'network','full'} and options.get('iperf_host'):command += ['--iperf-host',options['iperf_host']]
+            if kind in {'full','load'}:command += ['--load-seconds',str(options.get('load_seconds',60))]
+            if kind in {'network','full'} and options.get('allow_network') is True:command += ['--allow-network']
             if kind == "showcase":
                 command += ["--godot", self.engine]
             if kind in {"storage", "full"}:
@@ -91,9 +101,9 @@ class Dashboard:
                 command += ["--godot", self.engine]
             if headless and kind in {"quick", "full"}:
                 command += ["--headless"]
-            if fullscreen and kind != "storage":
+            if fullscreen and kind not in {"storage","network","load"}:
                 command += ["--fullscreen"]
-            elif kind != "storage":
+            elif kind not in {"storage","network","load"}:
                 command += ["--windowed"]
             if as_configured:
                 command += ["--as-configured"]
@@ -208,6 +218,12 @@ def serve(args, ready=None):
                     return self.reply(payload.encode("utf-8"), content_type="text/event-stream")
                 except (BrokenPipeError, ConnectionResetError):
                     return
+            if route.path == "/diagnostics":
+                if dashboard.snapshot()['phase']=='running':return self.reply({'error':'Wait for the active benchmark'},409)
+                from .diagnostics import collect, advice, test_profile
+                result={'hardware':dashboard.hardware,'configuration':{},'diagnostics':collect(),'telemetry':[]}
+                result['recommendations']=advice(result);result['recommended_profile']=test_profile(dashboard.hardware)
+                return self.reply(result)
             if route.path == "/drives":
                 if dashboard.snapshot()["phase"] == "running":
                     return self.reply({"error": "Wait for the active run before rediscovering drives"}, 409)

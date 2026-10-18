@@ -7,7 +7,7 @@
 #include "suite.h"
 static int probing=0;
 static int reject(const char *status,const char *message);
-static const char *vs="attribute vec2 position; uniform float phase; uniform float aspect; uniform vec2 offset; uniform float scale; varying vec2 uv; void main(){uv=position; float c=cos(phase),s=sin(phase); vec2 p=mat2(c,-s,s,c)*position; gl_Position=vec4((p*scale+offset)*vec2(1.0/aspect,1.0),0.0,1.0);}";
+static const char *vs="precision mediump float; attribute vec2 position; uniform float phase; uniform float aspect; uniform vec2 offset; uniform float scale; varying vec2 uv; void main(){uv=position; float c=cos(phase),s=sin(phase); vec2 p=mat2(c,-s,s,c)*position; gl_Position=vec4((p*scale+offset)*vec2(1.0/aspect,1.0),0.0,1.0);}";
 static const char *fs="precision mediump float; varying vec2 uv; uniform float phase; uniform float light; void main(){float grid=mod(floor(uv.x*6.0)+floor(uv.y*6.0),2.0); float glow=0.5+0.5*sin(phase+uv.x*4.0+uv.y*3.0); vec3 col=mix(vec3(0.04,0.8,0.7),vec3(0.65,0.15,0.95),glow); float lamps=0.0; for(int i=0;i<4;i++){vec2 pos=vec2(sin(float(i)*1.57+phase),cos(float(i)*1.57+phase)); lamps+=0.08/(0.1+length(uv-pos));} gl_FragColor=vec4(col*(0.45+grid*0.35+light*lamps),0.78);}";
 static GLuint shader(GLenum kind,const char *source) { GLuint s=glCreateShader(kind); GLint ok; glShaderSource(s,1,&source,NULL); glCompileShader(s); glGetShaderiv(s,GL_COMPILE_STATUS,&ok); if(!ok){char log[2048];glGetShaderInfoLog(s,sizeof log,NULL,log);exit(reject("unsupported",log));}return s; }
 static int compare(const void *a,const void *b){double x=*(const double*)a,y=*(const double*)b;return(x>y)-(x<y);}
@@ -35,12 +35,13 @@ int main(int argc,char **argv) {
     if(SDL_GL_SetSwapInterval(0)!=0)return reject("unsupported","Cannot disable vsync; requested graphics test is unsupported in this display configuration.");
     int actual_w,actual_h; SDL_GL_GetDrawableSize(window,&actual_w,&actual_h);
     if(actual_w!=width||actual_h!=height)return reject("unsupported","Requested graphics resolution unavailable; workload resolution is not reduced automatically.");
-    program=glCreateProgram(); glAttachShader(program,shader(GL_VERTEX_SHADER,vs)); glAttachShader(program,shader(GL_FRAGMENT_SHADER,fs)); glBindAttribLocation(program,0,"position"); glLinkProgram(program);glGetProgramiv(program,GL_LINK_STATUS,&ok);if(!ok)return reject("unsupported","GLES2 workload shader linking failed.");glUseProgram(program);
+    program=glCreateProgram(); glAttachShader(program,shader(GL_VERTEX_SHADER,vs)); glAttachShader(program,shader(GL_FRAGMENT_SHADER,fs)); glBindAttribLocation(program,0,"position"); glLinkProgram(program);glGetProgramiv(program,GL_LINK_STATUS,&ok);if(!ok){char log[4096];glGetProgramInfoLog(program,sizeof log,NULL,log);return reject("unsupported",log);}glUseProgram(program);
     phase=glGetUniformLocation(program,"phase");aspect=glGetUniformLocation(program,"aspect");offset=glGetUniformLocation(program,"offset");scale=glGetUniformLocation(program,"scale");light=glGetUniformLocation(program,"light");
     glGenBuffers(1,&buffer);glBindBuffer(GL_ARRAY_BUFFER,buffer);glBufferData(GL_ARRAY_BUFFER,sizeof vertices,vertices,GL_STATIC_DRAW);glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,0);glEnableVertexAttribArray(0);
     glViewport(0,0,width,height);glUniform1f(aspect,(float)width/height);
     if(probing&&glGetError()!=GL_NO_ERROR)return reject("unsupported","GLES2 workload setup failed.");
     printf("{\"suite_version\":\"" G3_SUITE_VERSION "\",\"workload_id\":\"" G3_WORKLOAD_ID "\",\"renderer\":");json_string((const char*)glGetString(GL_RENDERER));printf(",\"driver\":");json_string((const char*)glGetString(GL_VERSION));printf(",\"width\":%d,\"height\":%d,\"vsync\":false",width,height);
+    printf(",\"display_server\":");json_string(SDL_GetCurrentVideoDriver());
     if(probing){printf(",\"status\":\"ready\",\"reason\":\"Requested GLES2 context, shaders, resolution and swap interval available.\"}");glDeleteBuffers(1,&buffer);glDeleteProgram(program);SDL_GL_DeleteContext(ctx);SDL_DestroyWindow(window);SDL_Quit();return 0;}
     printf(",\"scenes\":[");
     for(scene=0;scene<5;scene++) {

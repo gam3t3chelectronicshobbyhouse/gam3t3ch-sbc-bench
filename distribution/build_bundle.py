@@ -61,7 +61,7 @@ def main():
     # Mark the engine as a binary, so Unix execute permission and its linked
     # libraries survive collection instead of treating it as a data asset.
     command += ["--add-binary", str(bundled_engine) + os.pathsep + "runtime/godot"]
-    for name in ("report.html", "dashboard.html", "share.js"):
+    for name in ("report.html", "dashboard.html", "share.js", "analysis.js"):
         command += ["--add-data", str(stage / "g3bench" / name) + os.pathsep + "g3bench"]
     for path in (stage / "build").iterdir():
         if path.name.startswith("g3bench-") and path.is_file():

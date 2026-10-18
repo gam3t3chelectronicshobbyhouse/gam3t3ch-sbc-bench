@@ -14,7 +14,7 @@ from .report import export_report
 from .scoring import scores
 from .system import hardware, Sampler
 
-FULL_ID = "full-checkup-0.1"
+FULL_ID = "full-checkup-0.2"
 
 
 class ContinuousTelemetry:
@@ -68,6 +68,9 @@ def run_full(args):
     from .__main__ import run, atomic_json
     from .storage import run_storage, STORAGE_ID
     from .showcase import run_showcase, SHOWCASE_ID
+    from .network import run_network, NETWORK_ID
+    from .load import run_load, LOAD_ID
+    from .diagnostics import collect, test_profile
     if not args.skip_storage and not args.allow_writes:
         raise ValueError("Full checkup includes temporary drive writes. Use --allow-writes, or explicitly choose --skip-storage.")
     if not 16 <= args.size_mib <= 16384 or not 10 <= args.timeout <= 7200:
@@ -80,19 +83,27 @@ def run_full(args):
             "configuration": {"mode": "full", "label": args.label, "notes": args.notes,
                               "resolution": [640, 360] if args.compat else [1280, 720], "fullscreen": args.fullscreen,
                               "threads": 1, "memory_buffer_bytes": 33554432, "size_mib": args.size_mib,
-                              "storage_skipped": args.skip_storage, "headless": args.headless,
+                              "load_seconds":getattr(args,"load_seconds",0), "storage_skipped": args.skip_storage, "headless": args.headless,
                               "background_load_accepted": args.as_configured,
                               "component_workloads": [WORKLOAD, STORAGE_ID, SHOWCASE_ID],
                               "telemetry_policy": "one-continuous-sampler"},
             "classification": "FULL_CHECKUP", "status": "running", "stage": "Preparing full checkup",
             "test_status": {}, "results": {}, "telemetry": [], "errors": {}, "power": None,
             "scores": scores({}), "comparison_eligible": False, "components": []}
+    data['diagnostics'] = collect()
+    data['configuration']['test_profile'] = test_profile(data['hardware'],getattr(args,'profile','auto'))
+    args.compat = args.compat or data['configuration']['test_profile']['name']=='legacy'
+    data['configuration']['resolution']=[640,360] if args.compat else [1280,720]
+    data['configuration']['renderer_requested'] = getattr(args,'renderer','compatibility')
+    data['configuration']['network_enabled'] = getattr(args,'allow_network',False)
     session = ContinuousTelemetry(data)
     session.sample()
     session.thread.start()
     code = 0
     try:
         jobs = [("portable", run)]
+        if getattr(args,'load_seconds',0):jobs.append(('load',run_load))
+        else:data['test_status']['load']={'status':'skipped','reason':'Sustained load explicitly omitted.'}
         if args.skip_storage:
             data["test_status"]["storage"] = {"status": "skipped", "reason": "Storage explicitly omitted; no temporary drive writes."}
         else:
@@ -101,6 +112,8 @@ def run_full(args):
             data["test_status"]["showcase"] = {"status": "skipped", "reason": "Headless full checkup omits the graphical Godot scene."}
         else:
             jobs.append(("showcase", run_showcase))
+        if getattr(args,'allow_network',False):jobs.append(('network',run_network))
+        else:data['test_status']['network']={'status':'skipped','reason':'External network traffic not enabled.'}
         for index, (name, runner) in enumerate(jobs):
             session.prefix = name.upper()
             atomic_json(folder / "result.json", data)

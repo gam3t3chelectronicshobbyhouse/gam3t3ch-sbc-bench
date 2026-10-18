@@ -1,25 +1,25 @@
-# 0.4.0 handoff
+# 0.5.0 handoff
 
-The app now has full-checkup sequencing, continuous supported telemetry, branded
-stats PNG export, default desktop/menu shortcuts, a menu uninstaller, optional
-LAN result collection, and bundled Godot 4.4.1 for supported standalone builds.
-The editor is not required. Idle mode launches no renderer or telemetry loop.
+The Gaia image motivated a GLES shader-precision fix with full linker errors and
+bounded random-drive workloads. The original JSON/log is needed to confirm the
+exact Gaia failures; a physical V3D/USB HDD rerun is still required.
 
-Windows standalone CPU/memory and all three fullscreen Godot stages have run
-successfully from the frozen application. The test suite passed 46 of 47 checks,
-with the Linux-only fio check skipped on Windows. Real loopback upload and
-listener shutdown passed. The exported PNG was downloaded and visually checked.
-See VALIDATION.md and distribution/README.md for evidence and platform limits.
+Implemented: independent CPU/RAM/GPU modes, standard/legacy auto profiles,
+on-demand graphics/session/API/USB checks, explicit Godot Vulkan testing with
+actual driver metadata, static fullscreen browser cover, sustained SHA256 CPU
+load/thermal profiling, opt-in HTTP or iperf3 send/receive, active-run disk/network
+counter charts, stage thermal summaries, raw cross-board comparisons and repeat
+median/range/N included in browser PDF printing. No overclock/system tweak is
+applied automatically. CPU/RAM normalization stays common across boards.
 
-Physical Raspberry Pi testing, repeated-run tuning characterization and real
-cross-machine LAN checks still require the intended hardware. Missing sensors
-and workloads remain unavailable, never zero or fabricated. Full checkup means
-all implemented workloads, not network throughput, endurance, multicore CPU or
-a controlled zram benefit workload, which remain future work.
+Local Windows checks: 56 tests, 54 pass and Linux fio/iperf integrations skipped;
+actual CPU/load/full/HTTP execution and bundled Godot 4.4.1 fullscreen Vulkan
+execution passed for available components. Full mode retained one sensor trace;
+Windows-inapplicable sensors/GLES/fio remained unavailable. Updated package CI
+and physical Pi qualification are tracked in VALIDATION.md.
 
-Windows setup/ZIP and Linux ARM64/x86-64 archives with checksum manifests are
-published in the v0.4.0 testing prerelease. All three package CI jobs passed;
-Linux regression passed all 47 tests including real fio. The installed Windows
-dashboard full run passed its available tests and returned to idle.
-Real local machine results stay under
-ignored build/ and are not included in packages or source history.
+Still outside scope: controlled zram/memory-pressure benefits, video/audio
+quality/latency tests, long endurance, manual power/per-watt and calibrated
+per-board ratings. Historical element14 fixes are linked as troubleshooting
+references, not generic Pi 5 recommendations. No actual local results ship in
+source/packages. Network transfers require explicit acknowledgement.

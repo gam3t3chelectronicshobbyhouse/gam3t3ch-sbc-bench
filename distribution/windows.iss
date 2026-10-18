@@ -2,7 +2,7 @@
   #error BundleDir is required
 #endif
 #ifndef AppVersion
-  #define AppVersion "0.4.0"
+  #define AppVersion "0.5.0"
 #endif
 [Setup]
 AppId={{89085F56-E9D2-49CC-91D5-728F0E658334}

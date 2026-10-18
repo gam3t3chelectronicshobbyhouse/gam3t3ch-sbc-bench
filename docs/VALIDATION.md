@@ -1,5 +1,23 @@
 # Validation — 2026-10-18
 
+## Suite 0.5.0
+
+Local Windows regression: 56 tests, 54 passed and Linux-only fio/iperf3
+integrations skipped. Includes actual bounded SHA256 load, network consent and
+transfer arithmetic, both-direction iperf argument/rate handling, profile
+selection, and continuation of independent drive reads after random-write errors.
+JavaScript and Python syntax checks passed. A real HTTP test completed five
+response-latency probes and all six send/receive trials. Bundled Godot 4.4.1
+headless metadata initialization and a real fullscreen Vulkan run completed.
+The new static fullscreen cover and a sustained load launched from the browser
+were verified; the cover closed automatically and results were saved.
+
+An integrated source full run completed CPU, memory, sustained load, explicit
+Vulkan Godot and HTTP networking with one telemetry stream. Windows-only
+unavailable Linux GLES/storage components remained explicit. No sensor readings
+were fabricated. Updated package and Linux/Mesa/fio/iperf3 CI checks follow this
+source validation. Gaia's V3D and USB HDD still require physical reruns.
+
 ## Suite 0.4.0
 
 - Full Windows regression with `G3BENCH_RUN_SOCKET_TESTS=1`: 47 tests,

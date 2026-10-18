@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.0
+
+- Correct shared GLES shader precision and retain full program-link diagnostics.
+- Add on-demand X11/Wayland/OpenGL/Vulkan/USB checks and evidence-based stock
+  tuning advice, without changing drivers, governors, clocks or system settings.
+- Add CPU/RAM/GPU-only modes, auto standard/legacy profiles, a static fullscreen
+  browser cover and explicit Godot Vulkan Mobile testing with actual API metadata.
+- Add sustained parallel SHA-256 CPU load/thermal profiling, separate throughput
+  and a default 60-second phase in full-checkup-0.2.
+- Advance drive workloads to storage-file-0.2: 20-second random stages rather
+  than whole-file random transfers, concise timeouts and independent read recovery.
+- Add opt-in Cloudflare HTTP send/receive/latency and iperf3 LAN bidirectional tests.
+- Add active-run disk/interface telemetry, stage thermal summaries, cross-board
+  raw metrics/deltas, repeat summaries and comparison plots included in PDF printing.
+- Keep unsupported readings unavailable and common CPU/RAM scoring; no invented
+  per-board normalization. Physical Gaia/Pi rerun remains required.
+
 ## 0.4.0
 
 - Default graphics to fullscreen, with focus/topmost requests and an explicit

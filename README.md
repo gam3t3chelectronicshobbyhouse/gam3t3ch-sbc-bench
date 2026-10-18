@@ -6,13 +6,79 @@ Tests run on the machine being measured. Reports contain measured rates and
 sensor readings; unavailable measurements stay unavailable rather than being
 replaced with estimates or demo values.
 
-**0.4.0.** The Windows standalone app includes Python, native workers and Godot
-4.4.1: no Godot editor installation is needed. A real frozen full checkup and
-fullscreen 3D run have passed on Windows. Windows and Linux ARM64/x86-64 packages
-passed CI and are available in the
-[0.4.0 testing prerelease](https://github.com/gam3t3chelectronicshobbyhouse/gam3t3ch-sbc-bench/releases/tag/v0.4.0).
-Physical Raspberry Pi qualification remains pending. See
-[validation](docs/VALIDATION.md) for the checks and limits.
+**0.5.0 testing source.** Standalone packages embed Godot 4.4.1, so the editor
+is not needed. Source CPU/load/full runs, real HTTP transfer and bundled-engine
+Vulkan checks have passed on Windows. Updated standalone CI qualification and
+Gaia's physical rerun are tracked in [validation](docs/VALIDATION.md).
+
+## 0.5.0: diagnostics, sustained load and useful comparisons
+
+- **CPU only / RAM only / Portable GPU only** run independently. Reactor Lab
+  remains a separate scene test; its mean FPS is visible even without a baseline
+  GPU score. Godot Compatibility uses OpenGL, not Vulkan. Choose **Vulkan Mobile**
+  explicitly to test Vulkan; actual driver, API version and display server are
+  recorded, and a fallback cannot masquerade as a Vulkan pass.
+- **Auto profile** selects legacy 360p GLES for Pi 1/original Zero/ARMv6 and common
+  720p for other boards. You can override it. CPU/RAM workloads and normalization
+  stay common across boards. There are no invented Pi-specific rating scales.
+- **Check graphics / system** runs on demand: X11/Wayland session, GLX renderer,
+  Vulkan probe, KMS modules, DRM nodes and USB topology. A missing diagnostic tool
+  is distinguished from an API test failure. No driver/settings are changed.
+- **Full checkup** adds a sustained CPU load phase (default 60 seconds, up to
+  eight SHA-256 workers automatically). **Sustained CPU / heat** runs it alone.
+  Duration is adjustable; CLI `full --load-seconds 0` explicitly skips this phase.
+  It measures parallel SHA-256 throughput and supported thermal/load telemetry,
+  not a complete hardware stability or memory-pressure certification.
+- The dashboard requests a static fullscreen **TESTING IN PROGRESS** cover for
+  fullscreen runs. Native graphics windows request foreground presentation above
+  it. Show dashboard/Stop controls remains available; browser/desktop focus rules
+  can restrict requests. This cover is a browser feature, not a CLI display.
+- Drive tests keep sequential I/O byte-bounded, but random 4 KiB stages now run
+  for **20 seconds each** over the selected working-file size. A slow mechanical
+  disk need not finish a whole GiB of random writes. Independent reads continue
+  after a random-write failure when initial file population succeeded. Timeouts
+  remain incomplete results; direct I/O is never silently changed to buffered.
+- Reports add per-stage heat summaries, disk/interface activity, overlaid loaded
+  run charts, raw workload deltas and repeated-configuration median/min/max/N.
+  Load previous `result.json` files, then **Print / save full report as PDF** to
+  include the comparisons. Existing PDF images cannot restore missing raw data.
+  Whole-system I/O activity includes other processes and is not application-only
+  workload bandwidth. Loaded runs stay local; report viewing makes no requests.
+
+### Network send / receive
+
+Network is **opt in**, including in Full checkup. With no LAN server specified,
+acknowledge traffic to run three 4 MiB downloads, three 2 MiB uploads and five
+response-latency requests against Cloudflare. Approximately 18 MiB of payload
+plus protocol overhead is transferred; Cloudflare sees the client's public IP.
+Rates include TCP/TLS/server/path overhead and are not a line-rate capacity
+estimate. Response-start latency and its standard deviation are HTTP metrics,
+not ICMP ping, packet loss or loaded-latency measurements. No benchmark result
+or system metadata is uploaded to Cloudflare.
+
+For a LAN test, install `iperf3` on both machines. Run `iperf3 -s` on the peer,
+then enter its address in the dashboard's LAN server field. This runs one TCP
+stream for 10 seconds in each direction and retains iperf3 JSON. Traffic volume
+scales with link speed. The peer must be reachable on its iperf3 port (5201);
+no firewall rule or persistent server is installed by GAM3T3CH.
+
+```sh
+# Optional diagnostic tools and LAN measurement, Raspberry Pi OS/Debian
+sudo apt-get install mesa-utils vulkan-tools usbutils iperf3
+
+g3bench diagnostics
+g3bench graphics --profile standard --open
+g3bench cpu --open
+g3bench memory --open
+g3bench load --load-seconds 60 --open
+g3bench showcase --renderer vulkan --open
+g3bench network --allow-network --open
+g3bench network --iperf-host 192.168.1.10 --allow-network --open
+g3bench full --allow-writes --load-seconds 60 --allow-network --open
+```
+
+See [Gaia findings, stock-setting checks and references](docs/DIAGNOSTICS_AND_TUNING.md)
+for the shader/drive changes and the limits of historical Pi tweaks.
 
 ## Choose an installation
 
@@ -32,14 +98,14 @@ driver. A missing Godot/GPU must not prevent independent CPU/memory tests.
 
 The package workflow builds these platform-specific artifacts:
 
-- `GAM3T3CH-0.4.0-windows-x86_64-setup.exe`
-- `GAM3T3CH-0.4.0-windows-x86_64.zip`
-- `GAM3T3CH-0.4.0-linux-aarch64.tar.gz`
-- `GAM3T3CH-0.4.0-linux-x86_64.tar.gz`
+- `GAM3T3CH-0.5.0-windows-x86_64-setup.exe`
+- `GAM3T3CH-0.5.0-windows-x86_64.zip`
+- `GAM3T3CH-0.5.0-linux-aarch64.tar.gz`
+- `GAM3T3CH-0.5.0-linux-x86_64.tar.gz`
 
 Use the package matching the **OS architecture**, not just the board's processor.
 Download it and the corresponding SHA256SUMS file from the
-[0.4.0 release page](https://github.com/gam3t3chelectronicshobbyhouse/gam3t3ch-sbc-bench/releases/tag/v0.4.0).
+[0.5.0 release page](https://github.com/gam3t3chelectronicshobbyhouse/gam3t3ch-sbc-bench/releases/tag/v0.5.0).
 
 Windows: run the setup executable as your normal user, then open GAM3T3CH from
 the desktop or Start menu. The desktop shortcut is selected by default; the
@@ -50,7 +116,7 @@ Keep its `_internal` folder beside the executable.
 Linux: extract the matching tar file into a user-owned folder and run:
 
 ```sh
-tar -xzf GAM3T3CH-0.4.0-linux-aarch64.tar.gz
+tar -xzf GAM3T3CH-0.5.0-linux-aarch64.tar.gz
 ./GAM3T3CH/GAM3T3CH
 ```
 
@@ -132,7 +198,7 @@ Closing a browser tab alone leaves its local server waiting; use **Exit
 dashboard** to stop the server and any results inbox.
 
 - **Portable benchmark:** five single-thread CPU tests, three memory tests and
-  five fixed GLES2 scenes when available.
+  five fixed GLES2 scenes when available. Subsystem buttons run them independently.
 - **Reactor Lab 3D:** bundled/found Godot engine, three fixed 3D stages, real FPS
   and 1% lows. Separate and unscored.
 - **Storage:** select mounted drives and acknowledge temporary writes. Four
@@ -302,10 +368,10 @@ Tag-triggered builds create a **draft** GitHub release, leaving publication unti
 the artifacts are reviewed. See [distribution notes](distribution/README.md).
 
 Physical Pi qualification and repeated-run testing remain required. Pi 1/Zero
-are experimental. Network throughput/iperf3, standard/endurance presets,
-manual power entry/per-watt reporting, multicore CPU and a controlled zram
+are experimental. Long endurance presets,
+manual power entry/per-watt reporting and a controlled zram
 memory-pressure workload are not implemented. The local results inbox is a
-file-transfer feature, not a network-throughput benchmark.
+file-transfer feature. Use the separate Network test for throughput measurements.
 
 See [methodology](docs/METHODOLOGY.md), [scores](docs/SCORING.md),
 [storage/tuning](docs/STORAGE_AND_TUNING.md), [board checklist](docs/BOARD_TESTING.md),

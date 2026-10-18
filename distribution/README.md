@@ -1,9 +1,9 @@
 # Standalone package builds
 
-Status: Windows 0.4.0 standalone ZIP and Inno Setup executable have been built
-locally with verified official Godot 4.4.1 included. A real frozen full checkup
-completed CPU/memory and all three fullscreen Godot stages. Linux architecture
-builds and physical Pi qualification are tracked separately in docs/VALIDATION.md.
+Status: 0.5.0 uses the same Windows/Linux self-contained package pipeline as
+0.4.0, with new analysis assets and network/load modules included automatically.
+See docs/VALIDATION.md for current package CI and physical Pi checks. Godot 4.4.1
+is included; the Godot editor is not a user dependency.
 
 Build on each target OS/CPU architecture. Python 3.9+ and a native C compiler
 are build dependencies, not requirements for the resulting standalone app.

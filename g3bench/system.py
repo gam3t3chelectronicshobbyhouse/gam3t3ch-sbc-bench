@@ -5,6 +5,7 @@ import re
 import shutil
 import socket
 import subprocess
+import time
 from pathlib import Path
 
 
@@ -118,9 +119,27 @@ def processes():
     return {pid: (name, ticks) for pid, name, ticks in rows}
 
 
+def io_counters():
+    net = [0, 0]; disks = [0, 0]; has_net = has_disk = False
+    for line in (read('/proc/net/dev') or '').splitlines()[2:]:
+        if ':' not in line:continue
+        name, values = line.split(':',1); fields = values.split()
+        if name.strip() == 'lo' or len(fields)<16:continue
+        net[0] += int(fields[0]); net[1] += int(fields[8]); has_net=True
+    for line in (read('/proc/diskstats') or '').splitlines():
+        fields=line.split()
+        if len(fields)<14:continue
+        name=fields[2]
+        if name.startswith(('loop','ram','zram','dm-','md')) or Path('/sys/class/block',name,'partition').exists():continue
+        disks[0]+=int(fields[5])*512;disks[1]+=int(fields[9])*512;has_disk=True
+    return (net if has_net else None, disks if has_disk else None)
+
+
 class Sampler:
     def __init__(self):
         self.previous = cpu_ticks()
+        self.io_previous = io_counters()
+        self.io_time = time.monotonic()
         self.vcgencmd = shutil.which("vcgencmd")
 
     def sample(self):
@@ -168,7 +187,14 @@ class Sampler:
             for path in sorted(glob.glob(pattern)):
                 cooling[path] = read(path)
         mem = memory()
-        return {"temperature_c": max((v["celsius"] for v in temperatures), default=None),
+        now=time.monotonic(); counters=io_counters(); elapsed=now-self.io_time
+        rates={}
+        for index,names in enumerate((('network_receive_mbps','network_send_mbps'),('disk_read_mb_s','disk_write_mb_s'))):
+            current,previous=counters[index],self.io_previous[index]
+            for column,name in enumerate(names):
+                rates[name]=max(0,current[column]-previous[column])/elapsed/(125000 if index==0 else 1e6) if current is not None and previous is not None and elapsed>0 else None
+        self.io_previous,self.io_time=counters,now
+        return {**rates,"temperature_c": max((v["celsius"] for v in temperatures), default=None),
                 "sensors": temperatures, "cpu_mhz": max(frequencies, default=None),
                 "cpu_utilization": utilization,
                 "memory_used_bytes": mem.get("MemTotal", 0) - mem.get("MemAvailable", 0) if "MemAvailable" in mem else None,

@@ -45,3 +45,13 @@ unchanged. Optional reactor-showcase-0.3 and storage remain unscored. Binary
 installer checks passed on Windows; physical Pi validation remains pending.
 Full checkup retains the portable CPU/memory/GPU scores where valid, with a
 separate mode/workload identity. It does not add storage or Godot into overall.
+
+Suite 0.5.0 adds explicit matching GLES shader precision without changing CPU/RAM
+operation counts. storage-file-0.2 keeps fixed sequential bytes but uses 20-second
+random stages. full-checkup-0.2 adds sustained SHA256 load (default 60 seconds,
+auto up to eight workers) and opt-in HTTP or iperf3 network trials. These rates
+are separate and unscored. Common CPU/RAM normalization stays fixed; legacy
+360p GPU work is a different group, never an adjusted official GPU score.
+Reports can compare compatible raw metrics even when overall is unavailable;
+repeat summaries show median/range/N, not statistical significance. Disk/interface
+activity is whole-system counter deltas during the run. See DIAGNOSTICS_AND_TUNING.md.

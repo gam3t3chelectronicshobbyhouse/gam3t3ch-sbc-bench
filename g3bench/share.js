@@ -27,11 +27,12 @@
             value.status === 'passed' ? 'Mean ' + number(value.latency_mean_ms, 3) + ' / p99 ' + number(value.latency_p99_ms, 3) + ' ms' : value.reason ?? 'Unavailable']);
         }
       }
+      const n=data.results.network;if(n)for(const key of ['download_mbps','upload_mbps','latency_ms'])measurements.push(['Network / '+key,number(n[key]),key==='latency_ms'?'HTTP response latency · ms':'HTTPS transfer · Mbps']);
       const statuses = Object.entries(data.test_status ?? {});
       const fields = [['temperature_c', 'Temperature', '°C', 1, '#62efd0'], ['cpu_mhz', 'CPU frequency', 'MHz', 1, '#b6a1ff'],
         ['cpu_utilization', 'CPU load', '%', 1, '#63b8ff'], ['memory_used_bytes', 'RAM in use', 'MiB', 1048576, '#ffca85'],
         ['swap_used_bytes', 'Swap in use', 'MiB', 1048576, '#ee97c8'], ['zram_used_bytes', 'Zram physical use', 'MiB', 1048576, '#a2dc71'],
-        ['pressure_percent', 'Memory pressure · some avg10', '%', 1, '#ffc06d']];
+        ['pressure_percent', 'Memory pressure · some avg10', '%', 1, '#ffc06d'], ['disk_read_mb_s','System disk read','MB/s',1,'#63b8ff'], ['disk_write_mb_s','System disk write','MB/s',1,'#ffca85']];
       const height = 1160 + Math.ceil(fields.length / 2) * 245 + measurements.length * 72 + statuses.length * 64 + 310;
       if (height > 30000) throw Error('This report is too large for one PNG. Use Print / save PDF for the full report.');
       const canvas = document.createElement('canvas');

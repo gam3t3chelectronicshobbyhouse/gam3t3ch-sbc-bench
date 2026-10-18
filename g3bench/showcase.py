@@ -95,6 +95,7 @@ def run_showcase(args):
         data["test_status"]["showcase"] = {"status": status, "reason": reason}
     code = 0
     try:
+        data['diagnostics'] = session.data.get('diagnostics',{}) if session else __import__('g3bench.diagnostics',fromlist=['collect']).collect(probes=False)
         engine = find_engine(args.godot)
         if not engine:
             outcome("unavailable", "Godot 4 is optional. Install a compatible engine and pass --godot PATH or set G3BENCH_GODOT.")
@@ -125,7 +126,11 @@ def run_showcase(args):
                         logger = threading.Thread(target=log_telemetry, daemon=True)
                         logger.start()
                     raw = folder / "showcase.json"
-                    command = [engine, "--path", str(PROJECT), "--rendering-method", "gl_compatibility"]
+                    requested = getattr(args,'renderer','compatibility')
+                    data['configuration']['renderer_requested'] = requested
+                    method = 'mobile' if requested == 'vulkan' else 'gl_compatibility'
+                    command = [engine, "--path", str(PROJECT), "--rendering-method", method]
+                    if requested == 'vulkan': command += ['--rendering-driver','vulkan']
                     if args.smoke_test:
                         command += ["--headless"]
                     if args.fullscreen:
@@ -150,10 +155,16 @@ def run_showcase(args):
                     status = measurement.get("status")
                     if status not in {"passed", "smoke_validated", "interrupted", "unavailable"}:
                         raise ValueError("Invalid showcase completion status")
+                    data['configuration']['renderer'] = measurement.get('rendering_method')
+                    data['configuration']['rendering_driver'] = measurement.get('rendering_driver')
+                    data['configuration']['display_server'] = measurement.get('display_server')
+                    if not args.smoke_test and requested == 'vulkan' and measurement.get('rendering_driver') != 'vulkan':
+                        status = 'unavailable'
+                        measurement.update(status=status,reason='Vulkan was requested but another driver was used. Result is labelled unavailable; no silent fallback.')
                     data["results"]["showcase"] = measurement
                     outcome(status, measurement.get("reason", "Showcase stopped."))
                     data["status"] = "complete" if status in {"passed", "smoke_validated"} else "partial"
-                    data["hardware"].update(gpu_renderer=measurement.get("renderer"), graphics_driver=version)
+                    data["hardware"].update(gpu_renderer=measurement.get("renderer"), graphics_driver=measurement.get("api_version"), godot_engine=version)
     except KeyboardInterrupt:
         outcome("interrupted", "Stopped by user.")
         data["status"] = "interrupted"

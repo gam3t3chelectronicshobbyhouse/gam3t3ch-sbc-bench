@@ -18,7 +18,7 @@ from .report import export_report
 from .scoring import scores
 from .system import Sampler, command, cpu_ticks, hardware, processes, read
 
-STORAGE_ID = "storage-file-0.1"
+STORAGE_ID = "storage-file-0.2"
 MIB = 1024 * 1024
 JOBS = (("sequential_write", "write", "1M"), ("sequential_read", "read", "1M"),
         ("random_write_4k", "randwrite", "4k"), ("random_read_4k", "randread", "4k"))
@@ -113,10 +113,10 @@ def resolve_target(directory, inventory):
 
 def fio_command(engine, filename, name, rw, block, size_mib):
     return [engine, "--name=" + name, "--filename=" + str(filename), "--rw=" + rw,
-            "--bs=" + block, "--size=" + str(size_mib * MIB), "--io_size=" + str(size_mib * MIB),
+            "--bs=" + block, "--size=" + str(size_mib * MIB), *(["--io_size=" + str(size_mib * MIB)] if not rw.startswith("rand") else []),
             "--ioengine=psync", "--iodepth=1", "--numjobs=1", "--direct=1", "--invalidate=1",
             "--randrepeat=1", "--randseed=731", "--refill_buffers=1", "--scramble_buffers=1",
-            "--end_fsync=1", "--allow_file_create=0", "--eta=never", "--output-format=json"]
+            "--end_fsync=1", "--allow_file_create=0", "--eta=never", "--output-format=json"] + (["--time_based=1", "--runtime=20"] if rw.startswith("rand") else [])
 
 
 @contextmanager
@@ -174,7 +174,7 @@ def measure_drive(target, engine, size_mib, timeout, stage):
                     raise RuntimeError(stderr.strip() or job.get("error") or stdout[:1000] or "fio failed")
                 direction = "write" if "write" in rw else "read"
                 io = job[direction]
-                if io.get("io_bytes", 0) != required or io.get("runtime", 0) <= 0:
+                if (not rw.startswith("rand") and io.get("io_bytes", 0) != required) or io.get("io_bytes", 0) <= 0 or io.get("runtime", 0) <= 0:
                     raise RuntimeError("fio did not complete the full requested byte count")
                 latency = io.get("clat_ns", {})
                 percentiles = latency.get("percentile", {})
@@ -182,11 +182,13 @@ def measure_drive(target, engine, size_mib, timeout, stage):
                                  "iops": io["iops"], "latency_mean_ms": latency.get("mean", 0) / 1e6 if latency else None,
                                  "latency_p99_ms": percentiles.get("99.000000", 0) / 1e6 if percentiles else None,
                                  "bytes": io["io_bytes"], "seconds": io["runtime"] / 1000,
+                                 "measurement_policy": "timed-20s" if rw.startswith("rand") else "fixed-bytes",
                                  "wall_seconds": time.monotonic() - started, "fio": raw}
             except (OSError, RuntimeError, ValueError, KeyError, subprocess.SubprocessError) as exc:
-                results[name] = {"status": "failed", "reason": str(exc)}
-                # Reads are invalid if the initial file population did not finish.
-                break
+                results[name] = {"status": "failed", "reason": ("Timed out after " + str(timeout) + " seconds; incomplete I/O is not a zero-speed result." if isinstance(exc, subprocess.TimeoutExpired) else str(exc))}
+                # Only a failed initial population invalidates subsequent reads.
+                if name == "sequential_write":
+                    break
     for name, _, _ in JOBS:
         results.setdefault(name, {"status": "skipped", "reason": "An earlier storage stage failed"})
     passed = all(test["status"] == "passed" for test in results.values())
@@ -196,9 +198,9 @@ def measure_drive(target, engine, size_mib, timeout, stage):
 def run_storage(args):
     from .__main__ import atomic_json
     if not 16 <= args.size_mib <= 16384 or args.size_mib % 1:
-        raise ValueError("Storage size must be 16–16384 MiB")
+        raise ValueError("Storage size must be 16â€“16384 MiB")
     if not 10 <= args.timeout <= 7200:
-        raise ValueError("Per-stage timeout must be 10–7200 seconds")
+        raise ValueError("Per-stage timeout must be 10â€“7200 seconds")
     inventory = discover()
     targets = []
     selection_errors = []
@@ -226,7 +228,7 @@ def run_storage(args):
     data = {"schema_version": 2, "benchmark_version": VERSION, "workload_id": STORAGE_ID,
             "timestamp": stamp.isoformat(), "run_id": folder.name, "hardware": hardware(),
             "configuration": {"mode": "storage", "size_mib": args.size_mib, "direct": True, "ioengine": "psync",
-                              "iodepth": 1, "numjobs": 1, "timeout_seconds": args.timeout,
+                              "iodepth": 1, "numjobs": 1, "timeout_seconds": args.timeout, "random_seconds": 20, "storage_workload": STORAGE_ID,
                               "label": args.label, "notes": args.notes},
             "classification": "STORAGE", "status": "partial", "stage": "Storage preflight", "telemetry": [],
             "test_status": {}, "results": {"storage": {"inventory": inventory, "drives": []}},

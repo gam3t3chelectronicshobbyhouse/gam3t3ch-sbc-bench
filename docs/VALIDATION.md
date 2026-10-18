@@ -1,0 +1,128 @@
+# First milestone validation — 2026-10-18
+
+## Board compatibility update — 2026-10-18
+
+Added Pi model/profile detection, per-test status/reasons, memory headroom checks,
+`g3bench check` and an unscored hidden GLES2 capability probe. Scored workloads
+and normalization are unchanged. JSON schema is now 2. See COMPATIBILITY.md.
+
+`python -m unittest discover -s tests -v` passed all 16 tests (6.529 seconds),
+including Pi 1/Zero/Zero 2/CM5/model detection, CPU-info fallback, insufficient
+capacity versus memory pressure, missing/incompatible tools, GPU capability
+results and a failed-CPU/unsupported-GPU run preserving a valid memory result.
+`python -m g3bench check --headless` reported CPU and memory READY and GPU SKIPPED.
+A real Windows `quick --headless` run recorded CPU PASSED, memory PASSED, GPU
+SKIPPED and null overall in `results/20261018T153406-92b519/`. The report's new
+compatibility table was verified in the browser. Pi 1 remains experimental and
+has not been tested on physical hardware.
+
+Official SDL2 2.30.9 headers and Khronos GLES2/KHR headers were downloaded into
+the ignored build folder for compile checks. The updated GPU source compiled
+without warnings to ARM64 and ARMv6 objects; the native CPU/memory source also
+compiled to an ARMv6 object. For Zig, the ARMv6 target used
+`-target arm-linux-musleabihf -mcpu=arm1176jzf_s`; `-march=armv6` was rejected by
+this compiler and replaced with its supported CPU identifier. These are object
+compilation checks, not linking or runtime validation. No SDL/GLES system
+packages were installed. `bash -n install.sh` passed after adding `armv6l`.
+
+The initial baseline validation below is retained as the historical build log.
+
+## Files created
+
+- `native/bench.c`, `native/gpu.c`, `native/suite.h`: fixed native workloads and version identity.
+- `g3bench/__init__.py`, `__main__.py`, `system.py`, `scoring.py`: CLI, orchestration, hardware/telemetry, score rules.
+- `g3bench/report.py`, `report.html`: offline results screen, graph rendering and local result comparison.
+- `CMakeLists.txt`, `install.sh`, `VERSION`: source builds and Debian-family installer skeleton.
+- `tests/test_baseline.py`, `.github/workflows/build.yml`: local regression checks and Linux build workflow.
+- `README.md`, `CHANGELOG.md`, `LICENSE`, `docs/*.md`: installation, methodology, scoring, support and validation.
+- `.gitignore`, `.gitattributes`: exclude local results/builds and preserve shell-script line endings.
+
+Build artifacts, downloaded compiler and actual machine results are ignored.
+At the time of initial local validation, no public repository had been created.
+Publication uses `gam3t3chelectronicshobbyhouse/gam3t3ch-sbc-bench`; the installer
+and README use that owner. The later board-testing checklist covers installation
+and qualification on the available Pi collection.
+
+## Dependencies
+
+Runtime: Python 3.9+ standard library and the compiled native tool. Optional GPU:
+SDL2 and GLES 2/Mesa with a working display. Build: C99 compiler, CMake 3.16+,
+pkg-config and a build tool. Debian packages are listed in README. fio and iperf3
+are not dependencies of this milestone.
+
+The development machine is Windows x86-64 with Python 3.13 and CMake 3.30.
+It has no host C compiler/build tool on PATH, no installed WSL environment and no
+SDL2/GLES 2 development packages. For local validation only, `ziglang 0.16.0`
+was downloaded from PyPI under the ignored `build/toolchain` directory. Its C
+compiler identifies as Clang 21.1.0. This is not a project runtime dependency.
+
+## Commands and results
+
+PowerShell, from the project root:
+
+```powershell
+python -m pip install --no-cache-dir --target build/toolchain ziglang
+$env:ZIG_GLOBAL_CACHE_DIR = "$PWD\build\zig-global-native"
+$env:ZIG_LOCAL_CACHE_DIR = "$PWD\build\zig-cache-native"
+& .\build\toolchain\ziglang\zig.exe cc -O2 -Wall -Wextra -Wpedantic native/bench.c -o build/g3bench-native.exe
+& .\build\toolchain\ziglang\zig.exe cc -target arm-linux-musleabihf -O2 -Wall -Wextra -Wpedantic -c native/bench.c -o build/bench-armv7.o
+& .\build\toolchain\ziglang\zig.exe cc -target aarch64-linux-musl -O2 -Wall -Wextra -Wpedantic -c native/bench.c -o build/bench-aarch64.o
+python -m unittest discover -s tests -v
+python -m g3bench detect
+python -m g3bench quick --headless
+python -m compileall -q g3bench tests
+& 'C:\Program Files\Git\bin\bash.exe' -n install.sh
+git diff --check
+```
+
+The final native Windows compile and both ARM object compilations exited 0,
+with no compiler warnings. ARM object builds check source compilation only;
+they do not establish linking, runtime correctness or board support. CMake
+configuration on this Windows host failed because NMake/host C compiler were
+absent; the Linux CMake/GPU build workflow is prepared but has not run here.
+
+Final unit/integration output:
+
+```text
+Ran 8 tests in 6.441s
+OK
+```
+
+Coverage includes repeated native workload checksums/rates, geometric scoring,
+missing and compatibility scores, sysfs units and throttle bits, missing
+sensors, HTML script-injection escaping, JSON persistence and idle-load
+cancellation before workloads. The busy-system warning printed during tests is
+from the deliberate simulated load check, not a measurement of this host.
+
+Final measured development run:
+
+```text
+[3.3s] CPU
+[5.7s] MEMORY
+[6.4s] GPU
+status: partial
+CPU: 4375.43
+Memory: 5482.68
+GPU / Storage / Network / Overall: null
+classification: DEVELOPMENT
+GPU: skipped, headless requested
+```
+
+JSON, CSV and standalone HTML were generated in
+`results/20261018T152817-225ac1/`. These are synthetic-reference development
+points, not Raspberry Pi scores. Missing Linux sensors remain null. The
+generated report was opened in the app browser and its score cards, missing
+sensor states, hardware details, comparison table and measurements were
+verified. A screenshot review confirmed the dark layout at desktop width.
+Installer syntax and Python bytecode compilation passed. The installer was not
+executed, and no packages were installed system-wide.
+
+## Remaining validation / next milestone
+
+Run the same tagged source on Pi 2 ARMv7 and Pi 5/CM5 AArch64. Verify GLES 2
+compilation/rendering, actual resolution, swap behavior, real thermal sensors,
+throttling bits, cooling data and full installer execution. Measure repeated-run
+variance with consistent cooling/governor/ambient conditions before calling any
+results official. Then add explicit opt-in fio storage tests with write warnings
+and a separately versioned score methodology. Standard/full/endurance modes,
+network, manual power entry and enhanced 3D graphics remain deferred.

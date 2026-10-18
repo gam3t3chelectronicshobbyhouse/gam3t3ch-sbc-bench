@@ -14,11 +14,11 @@ static int compare(const void *a,const void *b){double x=*(const double*)a,y=*(c
 static void json_string(const char *s){putchar('"');for(;s&&*s;s++){unsigned char c=(unsigned char)*s;if(c=='"'||c=='\\')putchar('\\');if(c>=32)putchar(c);}putchar('"');}
 static int reject(const char *status,const char *message){
     fprintf(stderr,"%s\n",message);
-    if(probing){printf("{\"suite_version\":\"" G3_SUITE_VERSION "\",\"workload_id\":\"" G3_WORKLOAD_ID "\",\"status\":");json_string(status);printf(",\"reason\":");json_string(message);printf("}");return 0;}
+    if(probing){printf("{\"suite_version\":\"" G3_SUITE_VERSION "\",\"workload_id\":\"" G3_WORKLOAD_ID "\",\"status\":");json_string(status);printf(",\"reason\":");json_string(message);printf("}");fflush(stdout);return 0;}
     return 2;
 }
 int main(int argc,char **argv) {
-    int width=1280,height=720,fullscreen=1,counts[]={16,128,128,512,1024},scene;
+    int width=1280,height=720,fullscreen=1,paced=0,counts[]={16,128,128,512,1024},scene;
     SDL_Window *window; SDL_GLContext ctx; GLuint program,buffer; GLint phase,aspect,offset,scale,light,ok;
     const GLfloat vertices[]={-1,-1,1,-1,-1,1,1,1};
     for(int i=1;i<argc;i++){if(!strcmp(argv[i],"--compat")){width=640;height=360;}else if(!strcmp(argv[i],"--fullscreen"))fullscreen=1;else if(!strcmp(argv[i],"--windowed"))fullscreen=0;else if(!strcmp(argv[i],"--probe"))probing=1;else return 1;}
@@ -32,7 +32,7 @@ int main(int argc,char **argv) {
     if(!window)return reject("unavailable",SDL_GetError());
     if(!probing)SDL_RaiseWindow(window);
     ctx=SDL_GL_CreateContext(window); if(!ctx)return reject("unsupported",SDL_GetError());
-    if(SDL_GL_SetSwapInterval(0)!=0)return reject("unsupported","Cannot disable vsync; requested graphics test is unsupported in this display configuration.");
+    paced = SDL_GL_SetSwapInterval(0)!=0 || SDL_GL_GetSwapInterval()!=0;
     int actual_w,actual_h; SDL_GL_GetDrawableSize(window,&actual_w,&actual_h);
     if(actual_w!=width||actual_h!=height)return reject("unsupported","Requested graphics resolution unavailable; workload resolution is not reduced automatically.");
     program=glCreateProgram(); glAttachShader(program,shader(GL_VERTEX_SHADER,vs)); glAttachShader(program,shader(GL_FRAGMENT_SHADER,fs)); glBindAttribLocation(program,0,"position"); glLinkProgram(program);glGetProgramiv(program,GL_LINK_STATUS,&ok);if(!ok){char log[4096];glGetProgramInfoLog(program,sizeof log,NULL,log);return reject("unsupported",log);}glUseProgram(program);
@@ -40,9 +40,9 @@ int main(int argc,char **argv) {
     glGenBuffers(1,&buffer);glBindBuffer(GL_ARRAY_BUFFER,buffer);glBufferData(GL_ARRAY_BUFFER,sizeof vertices,vertices,GL_STATIC_DRAW);glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,0);glEnableVertexAttribArray(0);
     glViewport(0,0,width,height);glUniform1f(aspect,(float)width/height);
     if(probing&&glGetError()!=GL_NO_ERROR)return reject("unsupported","GLES2 workload setup failed.");
-    printf("{\"suite_version\":\"" G3_SUITE_VERSION "\",\"workload_id\":\"" G3_WORKLOAD_ID "\",\"renderer\":");json_string((const char*)glGetString(GL_RENDERER));printf(",\"driver\":");json_string((const char*)glGetString(GL_VERSION));printf(",\"width\":%d,\"height\":%d,\"vsync\":false",width,height);
+    printf("{\"suite_version\":\"" G3_SUITE_VERSION "\",\"workload_id\":\"" G3_WORKLOAD_ID "\",\"renderer\":");json_string((const char*)glGetString(GL_RENDERER));printf(",\"driver\":");json_string((const char*)glGetString(GL_VERSION));printf(",\"width\":%d,\"height\":%d,\"vsync\":%s",width,height,paced?"true":"false");
     printf(",\"display_server\":");json_string(SDL_GetCurrentVideoDriver());
-    if(probing){printf(",\"status\":\"ready\",\"reason\":\"Requested GLES2 context, shaders, resolution and swap interval available.\"}");glDeleteBuffers(1,&buffer);glDeleteProgram(program);SDL_GL_DeleteContext(ctx);SDL_DestroyWindow(window);SDL_Quit();return 0;}
+    if(probing){printf(",\"status\":\"ready\",\"reason\":\"GLES2 context, shaders and resolution available. Actual vsync state is recorded; display-paced runs remain unscored.\"}");fflush(stdout);glDeleteBuffers(1,&buffer);glDeleteProgram(program);SDL_GL_DeleteContext(ctx);SDL_DestroyWindow(window);SDL_Quit();return 0;}
     printf(",\"scenes\":[");
     for(scene=0;scene<5;scene++) {
         const size_t capacity=1000000; double *times=malloc(capacity*sizeof(double)),sum=0,squares=0;

@@ -15,6 +15,12 @@ from g3bench.load import run_load
 from g3bench.storage import fio_command, measure_drive, MIB
 ROOT=Path(__file__).resolve().parents[1]
 class FeatureTests(unittest.TestCase):
+    def test_display_paced_gpu_is_measured_but_not_scored(self):
+        from g3bench.scoring import scores
+        gpu={'width':1280,'height':720,'vsync':True,'scenes':[{'average_fps':60}]*5}
+        self.assertIsNone(scores({'gpu':gpu})['gpu'])
+        gpu['vsync']=False
+        self.assertIsNotNone(scores({'gpu':gpu})['gpu'])
     def test_board_profiles_do_not_invent_board_specific_scores(self):
         self.assertEqual(test_profile({'architecture':'armv6l'},'auto')['name'],'legacy')
         self.assertEqual(test_profile({'architecture':'aarch64'},'auto')['gpu_resolution'],[1280,720])

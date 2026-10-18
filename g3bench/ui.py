@@ -17,9 +17,10 @@ import webbrowser
 
 from . import VERSION
 from .system import hardware
-from .showcase import find_engine, process_options, stop_process
+from .showcase import find_engine, process_options, stop_process, SHOWCASE_ID
 from .report import export_report
 from .scoring import scores
+from .branding import apply_branding, PRODUCT_NAME
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -86,7 +87,7 @@ class Dashboard:
                 cancelled = folder / "cancelled"
                 cancelled.mkdir()
                 result = {"schema_version": 2, "benchmark_version": VERSION,
-                          "workload_id": "reactor-showcase-0.1" if kind == "showcase" else "baseline-0.1",
+                          "workload_id": SHOWCASE_ID if kind == "showcase" else "baseline-0.1",
                           "hardware": self.hardware, "configuration": {"mode": kind},
                           "classification": "SHOWCASE" if kind == "showcase" else "INTERRUPTED",
                           "status": "cancelled", "stage": "Cancelled by user", "telemetry": [],
@@ -164,7 +165,7 @@ def serve(args, ready=None):
             if route.path == "/":
                 data = {"version": VERSION, "hardware": dashboard.hardware, "engine_available": bool(dashboard.engine), "token": token, "state": dashboard.snapshot()}
                 payload = json.dumps(data).replace("<", "\\u003c").replace("&", "\\u0026")
-                page = Path(__file__).with_name("dashboard.html").read_text(encoding="utf-8").replace("__DASHBOARD_DATA__", payload)
+                page = apply_branding(Path(__file__).with_name("dashboard.html").read_text(encoding="utf-8")).replace("__DASHBOARD_DATA__", payload)
                 return self.reply(page.encode("utf-8"), content_type="text/html; charset=utf-8")
             if route.path == "/events":
                 if parse_qs(route.query).get("token") != [token]:
@@ -225,7 +226,7 @@ def serve(args, ready=None):
     server = LocalServer(("127.0.0.1", args.port), Handler)
     server.daemon_threads = True
     url = f"http://127.0.0.1:{server.server_port}"
-    print(f"GAM3T3CH SBC Bench dashboard: {url}\nNo renderers or telemetry run while idle. Ctrl+C to exit.", flush=True)
+    print(f"{PRODUCT_NAME} dashboard: {url}\nNo renderers or telemetry run while idle. Ctrl+C to exit.", flush=True)
     if ready:
         ready(url, dashboard)
     if not args.no_open:

@@ -1,7 +1,7 @@
 extends Node3D
 ## Fixed, optional 3D showcase. This never contributes to baseline scores.
 
-const WORKLOAD_ID = "reactor-showcase-0.1"
+const WORKLOAD_ID = "reactor-showcase-0.2"
 const SCENE_SECONDS = 10.0
 const SCENE_NAMES = ["REACTOR / geometry", "ORBITAL / moving objects", "FLUX / particles"]
 var output_path := ""
@@ -54,6 +54,27 @@ func ring(radius: float, thickness: float, mat: Material, parent: Node3D, y: flo
 	mesh.ring_segments = 12
 	return piece(mesh, mat, Vector3(0, y, 0), parent)
 
+func brand_sign(angle: float, mat: Material, backing: Material) -> void:
+	var sign_root := Node3D.new()
+	sign_root.position = Vector3(sin(angle) * 8.3, 1.8, cos(angle) * 8.3)
+	sign_root.rotation.y = angle
+	add_child(sign_root)
+	piece(box(Vector3(5.6, 1.5, 0.18)), backing, Vector3.ZERO, sign_root)
+	piece(box(Vector3(5.3, 0.025, 0.02)), mat, Vector3(0, 0.62, 0.12), sign_root)
+	piece(box(Vector3(5.3, 0.025, 0.02)), mat, Vector3(0, -0.62, 0.12), sign_root)
+	var wordmark := TextMesh.new()
+	wordmark.text = "GAM3T3CH"
+	wordmark.font_size = 80
+	wordmark.pixel_size = 0.009
+	wordmark.depth = 0.025
+	piece(wordmark, mat, Vector3(0, 0.06, 0.13), sign_root)
+	var subtitle := TextMesh.new()
+	subtitle.text = "3D BENCHMARK"
+	subtitle.font_size = 40
+	subtitle.pixel_size = 0.004
+	subtitle.depth = 0.01
+	piece(subtitle, mat, Vector3(0, -0.4, 0.13), sign_root)
+
 func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	for i in range(args.size()):
@@ -69,6 +90,10 @@ func _ready() -> void:
 		finish("unavailable", "A graphical display is required.")
 		return
 	get_tree().auto_accept_quit = false
+	if DisplayServer.get_name() != "headless":
+		var icon := Image.new()
+		if icon.load_svg_from_string(FileAccess.get_file_as_string("res://brand/g3-mark.svg")) == OK:
+			DisplayServer.set_icon(icon)
 	Engine.max_fps = 0
 	var environment := WorldEnvironment.new()
 	var settings := Environment.new()
@@ -88,6 +113,11 @@ func _ready() -> void:
 	var mint := material(Color("51f4cb"), true)
 	var amber := material(Color("ff9b48"), true)
 	var violet := material(Color("9b78ff"), true)
+	var brand_ink := StandardMaterial3D.new()
+	brand_ink.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	brand_ink.albedo_color = Color("6cf1c8")
+	for i in range(4):
+		brand_sign(i * TAU / 4.0, brand_ink, dark)
 	piece(box(Vector3(60, 0.2, 60)), dark, Vector3(0, -0.3, 0))
 	for i in range(-15, 16):
 		piece(box(Vector3(0.018, 0.012, 60)), metal, Vector3(i * 2, -0.18, 0))
@@ -157,23 +187,45 @@ func _ready() -> void:
 	var panel := ColorRect.new()
 	panel.color = Color(0.025, 0.04, 0.065, 0.9)
 	panel.position = Vector2(24, 24)
-	panel.size = Vector2(590, 110)
+	panel.size = Vector2(640, 150)
 	layer.add_child(panel)
+	var accent := ColorRect.new()
+	accent.color = Color("6cf1c8")
+	accent.position = Vector2(24, 24)
+	accent.size = Vector2(4, 150)
+	layer.add_child(accent)
+	var badge := Label.new()
+	badge.text = "G3"
+	badge.position = Vector2(42, 32)
+	badge.add_theme_font_size_override("font_size", 42)
+	badge.modulate = Color("ffad68")
+	layer.add_child(badge)
 	title = Label.new()
-	title.position = Vector2(42, 33)
-	title.add_theme_font_size_override("font_size", 27)
+	title.position = Vector2(117, 31)
+	title.add_theme_font_size_override("font_size", 34)
 	title.modulate = Color("62efd0")
 	layer.add_child(title)
+	var product := Label.new()
+	product.text = "3D BENCHMARK / REACTOR LAB"
+	product.position = Vector2(119, 77)
+	product.add_theme_font_size_override("font_size", 14)
+	layer.add_child(product)
 	detail = Label.new()
-	detail.position = Vector2(42, 77)
-	detail.add_theme_font_size_override("font_size", 16)
+	detail.position = Vector2(42, 112)
+	detail.add_theme_font_size_override("font_size", 15)
 	layer.add_child(detail)
+	var signature := Label.new()
+	signature.text = "GAM3T3CH PERFORMANCE LAB  /  " + WORKLOAD_ID + "  /  FIXED WORKLOAD"
+	signature.position = Vector2(26, 684)
+	signature.add_theme_font_size_override("font_size", 12)
+	signature.modulate = Color("91b1ad")
+	layer.add_child(signature)
 	set_physics_process(false)
 	warmup = 2.0
 	update_overlay()
 
 func update_overlay() -> void:
-	title.text = "GAM3T3CH / REACTOR LAB"
+	title.text = "GAM3T3CH"
 	var fps := Engine.get_frames_per_second()
 	detail.text = "%s  |  %.1f s  |  %d FPS  |  ESC to stop\nOptional showcase · excluded from baseline scores" % ["WARMUP" if warmup > 0 else SCENE_NAMES[stage], scene_elapsed, fps]
 

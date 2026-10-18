@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1
+
+- Unify the dashboard, reports, desktop entry and scene under GAM3T3CH 3D Benchmark branding.
+- Add a shared inline G3 emblem, branded HUD, runtime window icon and four 3D GAM3T3CH signs.
+- Advance the optional scene to reactor-showcase-0.2 to identify its added text geometry.
+- Preserve static idle presentation and unchanged native baseline workloads/constants.
+
 ## 0.2.0
 
 - Add a static, on-demand benchmark dashboard with no idle renderer, telemetry or polling.

@@ -15,7 +15,7 @@ from .report import export_report
 from .scoring import scores
 from .system import Sampler, cpu_ticks, hardware, processes
 
-SHOWCASE_ID = "reactor-showcase-0.1"
+SHOWCASE_ID = "reactor-showcase-0.2"
 PROJECT = Path(__file__).resolve().parent.parent / "showcase"
 
 

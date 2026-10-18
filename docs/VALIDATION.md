@@ -1,5 +1,21 @@
 # First milestone validation — 2026-10-18
 
+## Suite 0.2.1 branding
+
+Unified the dashboard, reports, desktop entry and optional scene under
+GAM3T3CH 3D Benchmark. A shared SVG G3 mark is embedded in standalone reports
+and the dashboard, used for browser/desktop icons and loaded directly by the
+Godot window without requiring an asset-import step. Added a branded HUD,
+signature and four fixed 3D wordmark signs. No idle animation or background
+renderer was added. The native workloads/constants remain unchanged.
+
+The additional scene text geometry advances its identity to
+`reactor-showcase-0.2`. The Windows Godot scene initialized headlessly and
+completed a real graphical run; the dashboard, icon, HUD and scene wordmarks
+were visually checked. All 22 existing regression/lifecycle tests passed
+(6.618 seconds), and the shared SVG parsed successfully as XML. Physical Pi
+graphics/idle validation remains pending.
+
 ## Suite 0.2.0 dashboard and optional Godot showcase
 
 - Added an on-demand loopback dashboard with a static preview and no idle

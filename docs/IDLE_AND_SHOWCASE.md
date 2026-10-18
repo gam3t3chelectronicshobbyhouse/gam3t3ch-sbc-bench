@@ -1,4 +1,4 @@
-# Idle behavior and Reactor Lab — suite 0.2.0
+# Idle behavior and Reactor Lab — suite 0.2.1
 
 ## Lifecycle
 
@@ -32,7 +32,7 @@ using Exit. The CLI always remains available for a machine without a desktop.
 
 ## Showcase methodology
 
-Workload identity: `reactor-showcase-0.1`. This is **unscored** and has no baseline
+Workload identity: `reactor-showcase-0.2`. This is **unscored** and has no baseline
 normalization or comparison eligibility. The baseline remains `baseline-0.1`.
 No Godot result can populate CPU/memory/GPU/overall baseline scores.
 
@@ -43,7 +43,8 @@ affect the portable benchmark. Startup/renderer/script failures keep an engine
 log and a FAILED result. Engine version is recorded for repeatability; different
 engine versions/drivers should not be treated as identical measurements.
 
-The source scene contains a platform, floor grid, twelve pylons, rotating torus
+The source scene contains four fixed GAM3T3CH signs with extruded lettering,
+a platform, floor grid, twelve pylons, rotating torus
 rings and core, a directional light and four omni lights. Stage two adds 192
 orbiting mesh satellites; stage three adds a fixed 1,536-instance moving field.
 The latter is a geometric particle field, not a claim of transparent-particle
@@ -67,6 +68,11 @@ Suite 0.2.0 changes report/measurement activity and adds the dashboard/showcase.
 Native workload operation counts and normalization constants remain the same,
 but results are grouped by suite version. Do not silently merge 0.1.0 and 0.2.0
 overall comparisons. Older native binaries are rejected until rebuilt.
+
+Suite 0.2.1 adds static GAM3T3CH branding and a shared G3 emblem. The native
+baseline is unchanged. The added 3D signs change the optional scene geometry,
+so it advances from reactor-showcase-0.1 to reactor-showcase-0.2. These scene
+versions must not be treated as the same graphics workload.
 
 ## Development checks
 

@@ -1,9 +1,12 @@
-# GAM3T3CH SBC Bench
+# GAM3T3CH 3D Benchmark
+
+GAM3T3CH SBC Bench is the portable system-testing core of GAM3T3CH 3D Benchmark.
+The repository remains `gam3t3ch-sbc-bench` and the command remains `g3bench`.
 
 A repeatable Linux single-board computer benchmark, designed for Raspberry Pi 2,
 3, 4, 5 and Compute Module 5, with future ARM Linux boards in mind.
 
-**0.2.0 is a development suite. No Pi board is hardware-validated yet.**
+**0.2.1 is a development suite. No Pi board is hardware-validated yet.**
 It contains hardware detection, temperature/cooling telemetry, native CPU and
 memory workloads, an optional SDL2/OpenGL ES 2 benchmark, JSON/CSV output and a
 standalone dark results screen, an on-demand dashboard and an optional Godot 4

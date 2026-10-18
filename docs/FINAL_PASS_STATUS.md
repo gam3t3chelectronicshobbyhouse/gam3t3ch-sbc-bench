@@ -17,6 +17,9 @@ and workloads remain unavailable, never zero or fabricated. Full checkup means
 all implemented workloads, not network throughput, endurance, multicore CPU or
 a controlled zram benefit workload, which remain future work.
 
-Installer artifacts, source and package-CI publication state should be checked
-on the GitHub releases/actions pages. Real local machine results stay under
+Windows setup/ZIP and Linux ARM64/x86-64 archives with checksum manifests are
+published in the v0.4.0 testing prerelease. All three package CI jobs passed;
+Linux regression passed all 47 tests including real fio. The installed Windows
+dashboard full run passed its available tests and returned to idle.
+Real local machine results stay under
 ignored build/ and are not included in packages or source history.

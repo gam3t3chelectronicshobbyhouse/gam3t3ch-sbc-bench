@@ -22,10 +22,18 @@
   shortcuts, its installed native worker produced a result, uninstall removed
   app files/shortcuts and retained external results, then the app was installed
   into the default per-user location with the desktop/menu entries verified.
+- The installed Windows dashboard's Full checkup completed in 49.676 seconds
+  with 55 continuous samples. CPU/memory/Godot passed, Windows-inapplicable
+  GLES/fio were unavailable/unsupported, and Godot exited. The waiting dashboard
+  used 0.00 additional CPU seconds over a five-second idle observation.
+- GitHub Linux baseline run 39166197822 passed all 47 tests, including real fio,
+  and Godot headless initialization. Package run 39166198010 passed Windows,
+  Linux x86-64 and native Linux ARM64 frozen-worker/bundled-engine checks.
+  Its seven package/checksum assets are published as the v0.4.0 prerelease.
 - Real local development results remain ignored under build/. They are not Pi
   benchmark evidence or calibrated reference scores.
 
-Remaining qualification: additional clean target-system checks, Linux architecture CI,
+Remaining qualification: additional clean target-system checks,
 physical LAN transfer between machines, and actual Pi/removable-drive tests.
 Focus/topmost are requests subject to desktop policy. Headless engine startup
 is not a substitute for graphical validation on each Pi. ARMv6 remains

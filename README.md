@@ -8,17 +8,19 @@ replaced with estimates or demo values.
 
 **0.4.0.** The Windows standalone app includes Python, native workers and Godot
 4.4.1: no Godot editor installation is needed. A real frozen full checkup and
-fullscreen 3D run have passed on Windows. Linux ARM64/x86-64 packages are built
-by CI; physical Raspberry Pi qualification remains pending. See
+fullscreen 3D run have passed on Windows. Windows and Linux ARM64/x86-64 packages
+passed CI and are available in the
+[0.4.0 testing prerelease](https://github.com/gam3t3chelectronicshobbyhouse/gam3t3ch-sbc-bench/releases/tag/v0.4.0).
+Physical Raspberry Pi qualification remains pending. See
 [validation](docs/VALIDATION.md) for the checks and limits.
 
 ## Choose an installation
 
 | Machine | Installation / limits |
 | --- | --- |
-| Windows x86-64 | Standalone setup/portable ZIP build recipe includes Python, native CPU/memory tests and Godot. Linux sensors and fio drive tests are unavailable. Windows results are development results, outside Linux baseline scoring groups. |
-| Raspberry Pi / Linux ARM64 | Standalone tar bundle recipe includes Python, native tools and Godot. Targets glibc-based Raspberry Pi OS/Debian Bookworm or newer, with a compatible graphical session/driver for 3D. Physical Pi qualification is pending. |
-| Linux x86-64 | Equivalent standalone tar bundle recipe, or the source installer. Graphics still requires a working system display/driver. |
+| Windows x86-64 | Standalone setup/portable ZIP includes Python, native CPU/memory tests and Godot. Linux sensors and fio drive tests are unavailable. Windows results are development results, outside Linux baseline scoring groups. |
+| Raspberry Pi / Linux ARM64 | Standalone tar bundle includes Python, native tools and Godot. Targets glibc-based Raspberry Pi OS/Debian Bookworm or newer, with a compatible graphical session/driver for 3D. Physical Pi qualification is pending. |
+| Linux x86-64 | Equivalent standalone tar bundle, or the source installer. Graphics still requires a working system display/driver. |
 | Pi 2/3 on 32-bit Linux | Source installer. Native/GLES capability determines available tests. Godot ARM32 may be installed, but engine/driver/OS compatibility is not guaranteed. |
 | Pi 1 / original Zero / ARMv6 | Experimental source build. Godot 4 is not bundled for ARMv6. CPU/memory and GLES2 remain independent of Godot availability. |
 | macOS | Experimental source-installer path with Python 3.9+ and a native compiler or local Zig toolchain. Godot download mapping is included, but no standalone macOS artifact is currently qualified. Linux sensors/storage tests are unavailable. |
@@ -36,9 +38,8 @@ The package workflow builds these platform-specific artifacts:
 - `GAM3T3CH-0.4.0-linux-x86_64.tar.gz`
 
 Use the package matching the **OS architecture**, not just the board's processor.
-Check its corresponding SHA256SUMS file. These filenames describe build outputs;
-they are not a claim that downloads are already available on the
-[releases page](https://github.com/gam3t3chelectronicshobbyhouse/gam3t3ch-sbc-bench/releases).
+Download it and the corresponding SHA256SUMS file from the
+[0.4.0 release page](https://github.com/gam3t3chelectronicshobbyhouse/gam3t3ch-sbc-bench/releases/tag/v0.4.0).
 
 Windows: run the setup executable as your normal user, then open GAM3T3CH from
 the desktop or Start menu. The desktop shortcut is selected by default; the

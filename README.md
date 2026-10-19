@@ -141,7 +141,7 @@ The package workflow builds these platform-specific artifacts:
 
 Use the package matching the **OS architecture**, not just the board's processor.
 Download it and the corresponding SHA256SUMS file from the
-[0.5.2 release page](https://github.com/gam3t3chelectronicshobbyhouse/gam3t3ch-sbc-bench/releases/tag/v0.5.3).
+[0.5.3 release page](https://github.com/gam3t3chelectronicshobbyhouse/gam3t3ch-sbc-bench/releases/tag/v0.5.3).
 
 Windows: run the setup executable as your normal user, then open GAM3T3CH from
 the desktop or Start menu. The desktop shortcut is selected by default; the

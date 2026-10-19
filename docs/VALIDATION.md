@@ -14,6 +14,14 @@ Lifecycle tests cover disabled initialization, invalid inputs, occupied ports,
 early child exit, duplicate start, own-process Stop and hosting/benchmark
 exclusion. HTTP tests cover authorization and refusing server start during a run.
 
+Package run 39190233794 passed Windows x86-64, Linux x86-64 and Linux ARM64
+frozen native-worker and embedded Godot checks; all seven release assets are
+published in v0.5.3. The Windows installer SHA256 was verified, installation
+over 0.5.2 completed without restart, and the installed 0.5.3 dashboard was
+checked for setup discovery, missing-iperf3 guidance and copying the manual
+server command. No LAN server was left running. Windows still requires iperf3
+separately on PATH; Pi OS users get a copyable apt command.
+
 ## Suite 0.5.2
 
 Local Windows regression: 57 tests, 55 passed and Linux-only fio/iperf3

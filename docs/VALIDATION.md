@@ -1,5 +1,19 @@
 # Validation — 2026-10-18
 
+## Suite 0.5.3
+
+Linux run 39174266037 passed all 62 tests in 71.448 seconds, including a real
+loopback upload and reverse/download through the new temporary server manager,
+then clean process/watcher shutdown. Real fio, Mesa shader probing and all five
+GLES scenes passed. Windows passed 60 applicable tests; two Linux-only
+integrations were skipped. JavaScript/Python syntax checks passed.
+
+Dashboard browser checks confirmed missing-iperf3 guidance, local IPv4 discovery,
+custom-port command generation and working server-command/address copy buttons.
+Lifecycle tests cover disabled initialization, invalid inputs, occupied ports,
+early child exit, duplicate start, own-process Stop and hosting/benchmark
+exclusion. HTTP tests cover authorization and refusing server start during a run.
+
 ## Suite 0.5.2
 
 Local Windows regression: 57 tests, 55 passed and Linux-only fio/iperf3
